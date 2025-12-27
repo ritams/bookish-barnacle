@@ -1,0 +1,129 @@
+.editor-page {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e2e;
+}
+
+.editor-page.loading {
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #a6adc8;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.editor-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #181825;
+    border-bottom: 1px solid #313244;
+    min-height: 52px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    color: #a6adc8;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.back-btn:hover {
+    background: #313244;
+    color: #cdd6f4;
+}
+
+.project-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #cdd6f4;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.compile-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #a6e3a1 0%, #94e2d5 100%);
+    border: none;
+    border-radius: 8px;
+    color: #1e1e2e;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.compile-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(166, 227, 161, 0.3);
+}
+
+.compile-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    color: #a6adc8;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.logout-btn:hover {
+    border-color: #f38ba8;
+    color: #f38ba8;
+}
+
+.editor-page-main {
+    flex: 1;
+    overflow: hidden;
+}
+
+.resize-handle {
+    width: 4px;
+    background: #313244;
+    transition: background 0.15s;
+}
+
+.resize-handle:hover {
+    background: #45475a;
+}
