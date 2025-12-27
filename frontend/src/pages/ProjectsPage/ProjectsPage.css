@@ -45,7 +45,7 @@
     font-weight: 500;
 }
 
-.logout-btn {
+.projects-header .logout-btn {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -55,13 +55,14 @@
     border-radius: 6px;
     color: #cdd6f4;
     font-size: 14px;
+    line-height: 1;
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
-.logout-btn:hover {
+.projects-header .logout-btn:hover {
     border-color: #f38ba8;
     color: #f38ba8;
 }

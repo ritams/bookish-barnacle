@@ -94,7 +94,7 @@
     cursor: not-allowed;
 }
 
-.logout-btn {
+.editor-page-header .logout-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -108,7 +108,7 @@
     transition: all 0.15s;
 }
 
-.logout-btn:hover {
+.editor-page-header .logout-btn:hover {
     border-color: #f38ba8;
     color: #f38ba8;
 }
