@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as pdfjs from 'pdfjs-dist';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
-import './PDFViewer.css';
 
 // Configure PDF.js worker for version 5.x
 pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@5.4.449/build/pdf.worker.min.mjs';
@@ -58,7 +57,7 @@ export function PDFViewer() {
                 // Scale canvas via CSS to display at correct size
                 canvas.style.width = `${viewport.width}px`;
                 canvas.style.height = `${viewport.height}px`;
-                canvas.className = 'pdf-page';
+                canvas.className = 'shadow-xl rounded flex-shrink-0';
 
                 // Scale context to match DPR
                 context.scale(dpr, dpr);
@@ -96,9 +95,9 @@ export function PDFViewer() {
 
     if (isCompiling) {
         return (
-            <div className="pdf-viewer">
-                <div className="pdf-loading">
-                    <div className="spinner" />
+            <div className="flex flex-col h-full bg-olive-100 overflow-hidden">
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 text-olive-600">
+                    <Loader2 size={32} className="animate-spin" />
                     <span>Compiling LaTeX...</span>
                 </div>
             </div>
@@ -107,10 +106,12 @@ export function PDFViewer() {
 
     if (compilationError) {
         return (
-            <div className="pdf-viewer">
-                <div className="pdf-error">
-                    <h3>Compilation Error</h3>
-                    <pre>{compilationError}</pre>
+            <div className="flex flex-col h-full bg-olive-100 overflow-hidden">
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                    <h3 className="text-red-600 font-semibold mb-4 text-lg">Compilation Error</h3>
+                    <pre className="max-w-full p-4 bg-white rounded-lg text-left overflow-x-auto text-sm text-amber-700 font-mono border border-olive-200">
+                        {compilationError}
+                    </pre>
                 </div>
             </div>
         );
@@ -118,29 +119,47 @@ export function PDFViewer() {
 
     if (!pdfUrl) {
         return (
-            <div className="pdf-viewer">
-                <div className="pdf-placeholder">
-                    <p>Click "Compile" to generate PDF</p>
+            <div className="flex flex-col h-full bg-olive-100 overflow-hidden">
+                <div className="flex-1 flex flex-col items-center justify-center text-olive-400">
+                    <p className="text-sm">Click "Compile" to generate PDF</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="pdf-viewer">
-            <div className="pdf-toolbar">
-                <div className="toolbar-group">
-                    <button onClick={handleZoomOut} title="Zoom Out">
+        <div className="flex flex-col h-full bg-olive-100 overflow-hidden">
+            {/* Toolbar */}
+            <div className="flex items-center justify-center gap-6 px-4 py-2 bg-white border-b border-olive-200">
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleZoomOut}
+                        title="Zoom Out"
+                        className="flex items-center justify-center w-8 h-8 border border-olive-200 rounded-md text-olive-700 hover:bg-olive-50 transition-colors"
+                    >
                         <ZoomOut size={18} />
                     </button>
-                    <span className="zoom-level">{Math.round(scale * 100)}%</span>
-                    <button onClick={handleZoomIn} title="Zoom In">
+                    <span className="min-w-[60px] text-center text-sm text-olive-600">
+                        {Math.round(scale * 100)}%
+                    </span>
+                    <button
+                        onClick={handleZoomIn}
+                        title="Zoom In"
+                        className="flex items-center justify-center w-8 h-8 border border-olive-200 rounded-md text-olive-700 hover:bg-olive-50 transition-colors"
+                    >
                         <ZoomIn size={18} />
                     </button>
                 </div>
-                <span className="page-info">{totalPages} page{totalPages !== 1 ? 's' : ''}</span>
+                <span className="text-sm text-olive-500">
+                    {totalPages} page{totalPages !== 1 ? 's' : ''}
+                </span>
             </div>
-            <div className="pdf-container" ref={containerRef} />
+
+            {/* PDF Container */}
+            <div
+                ref={containerRef}
+                className="flex-1 min-h-0 flex flex-col items-center gap-4 p-6 overflow-y-auto"
+            />
         </div>
     );
 }

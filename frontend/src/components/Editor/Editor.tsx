@@ -5,36 +5,36 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, indentOnInput } from '@codemirror/language';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { latex } from 'codemirror-lang-latex';
-import { Download } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
 import './Editor.css';
 
+// Light olive theme for CodeMirror
 const editorTheme = EditorView.theme({
     '&': {
         height: '100%',
         fontSize: '14px',
-        backgroundColor: '#1e1e2e',
+        backgroundColor: '#ffffff',
     },
     '.cm-content': {
         fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-        caretColor: '#f5e0dc',
+        caretColor: '#4d5439',
     },
     '.cm-cursor': {
-        borderLeftColor: '#f5e0dc',
+        borderLeftColor: '#4d5439',
     },
     '.cm-selectionBackground, ::selection': {
-        backgroundColor: '#45475a !important',
+        backgroundColor: '#dde2d3 !important',
     },
     '.cm-gutters': {
-        backgroundColor: '#181825',
-        color: '#6c7086',
-        borderRight: '1px solid #313244',
+        backgroundColor: '#f7f8f5',
+        color: '#808c64',
+        borderRight: '1px solid #dde2d3',
     },
     '.cm-activeLineGutter': {
-        backgroundColor: '#313244',
+        backgroundColor: '#eef0e8',
     },
     '.cm-activeLine': {
-        backgroundColor: '#1e1e2e80',
+        backgroundColor: '#f7f8f580',
     },
     '.cm-line': {
         padding: '0 4px',
@@ -65,35 +65,7 @@ export function Editor({ initialContent = '', onChange }: EditorProps) {
         [currentFile, updateFileContent, onChange]
     );
 
-    const handleSave = () => {
-        if (!currentFile) return;
 
-        let blob: Blob;
-        const filename = currentFile.name;
-
-        if (isImage && currentFile.content.startsWith('data:')) {
-            // Convert base64 to blob for images
-            const [header, data] = currentFile.content.split(',');
-            const mimeMatch = header.match(/:(.*?);/);
-            const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-            const binary = atob(data);
-            const array = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-                array[i] = binary.charCodeAt(i);
-            }
-            blob = new Blob([array], { type: mime });
-        } else {
-            // Text file
-            blob = new Blob([currentFile.content], { type: 'text/plain' });
-        }
-
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
 
     useEffect(() => {
         if (!editorRef.current || isImage) return;
@@ -167,18 +139,15 @@ export function Editor({ initialContent = '', onChange }: EditorProps) {
     // Render image preview for image files
     if (isImage && currentFile) {
         return (
-            <div className="editor-container">
-                <div className="editor-header">
-                    <span className="editor-filename">{currentFile.name}</span>
-                    <button className="save-btn" onClick={handleSave} title="Download file">
-                        <Download size={16} />
-                    </button>
+            <div className="flex flex-col h-full bg-white text-olive-800">
+                <div className="flex items-center justify-between px-4 py-2 bg-olive-50 border-b border-olive-200 min-h-[40px]">
+                    <span className="text-sm font-medium text-olive-700">{currentFile.name}</span>
                 </div>
-                <div className="image-preview">
+                <div className="flex-1 flex items-center justify-center bg-olive-50 p-5 overflow-auto">
                     <img
                         src={currentFile.content}
                         alt={currentFile.name}
-                        style={{ maxWidth: '100%', maxHeight: 'calc(100% - 40px)', objectFit: 'contain' }}
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
                     />
                 </div>
             </div>
@@ -186,18 +155,13 @@ export function Editor({ initialContent = '', onChange }: EditorProps) {
     }
 
     return (
-        <div className="editor-container">
-            <div className="editor-header">
-                <span className="editor-filename">
+        <div className="flex flex-col h-full bg-white text-olive-800">
+            <div className="flex items-center justify-between px-4 py-2 bg-olive-50 border-b border-olive-200 min-h-[40px]">
+                <span className="text-sm font-medium text-olive-700">
                     {currentFile?.name || 'No file selected'}
                 </span>
-                {currentFile && (
-                    <button className="save-btn" onClick={handleSave} title="Download file">
-                        <Download size={16} />
-                    </button>
-                )}
             </div>
-            <div ref={editorRef} className="editor-content" />
+            <div ref={editorRef} className="editor-content flex-1 overflow-auto" />
         </div>
     );
 }

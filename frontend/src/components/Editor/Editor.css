@@ -1,51 +1,4 @@
-.editor-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: #1e1e2e;
-  color: #cdd6f4;
-}
-
-.editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background-color: #181825;
-  border-bottom: 1px solid #313244;
-  min-height: 40px;
-}
-
-.save-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: #a6adc8;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.save-btn:hover {
-  background-color: #313244;
-  color: #89b4fa;
-}
-
-.editor-filename {
-  font-size: 13px;
-  font-weight: 500;
-  color: #89b4fa;
-  font-family: 'Inter', system-ui, sans-serif;
-}
-
-.editor-content {
-  flex: 1;
-  overflow: auto;
-}
-
+/* CodeMirror specific overrides */
 .editor-content .cm-editor {
   height: 100%;
 }
@@ -55,67 +8,52 @@
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
 
-/* Syntax highlighting overrides for LaTeX */
+/* Syntax highlighting for light olive theme */
 .cm-content .tok-keyword {
-  color: #cba6f7;
+  color: #636d4d;
+  font-weight: 500;
 }
 
 .cm-content .tok-string {
-  color: #a6e3a1;
+  color: #4d5439;
 }
 
 .cm-content .tok-comment {
-  color: #6c7086;
+  color: #a3ae8c;
   font-style: italic;
 }
 
 .cm-content .tok-variableName {
-  color: #89dceb;
+  color: #808c64;
 }
 
 .cm-content .tok-number {
-  color: #fab387;
+  color: #636d4d;
 }
 
 .cm-content .tok-bracket {
-  color: #f9e2af;
+  color: #3a3f2b;
 }
 
 .cm-content .tok-operator {
-  color: #94e2d5;
+  color: #4d5439;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling for editor */
 .editor-content ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 .editor-content ::-webkit-scrollbar-track {
-  background: #181825;
+  background: #f7f8f5;
 }
 
 .editor-content ::-webkit-scrollbar-thumb {
-  background: #45475a;
+  background: #c4ccb3;
   border-radius: 4px;
 }
 
 .editor-content ::-webkit-scrollbar-thumb:hover {
-  background: #585b70;
-}
-
-/* Image Preview */
-.image-preview {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #1e1e2e;
-  padding: 20px;
-  overflow: auto;
-}
-
-.image-preview img {
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: #a3ae8c;
 }

@@ -11,7 +11,6 @@ import {
     Upload,
 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
-import './FileManager.css';
 
 interface FileTreeItem {
     id: string;
@@ -25,9 +24,9 @@ interface FileTreeItem {
 // Get icon based on file type
 function getFileIcon(name: string, mimeType?: string) {
     if (mimeType?.startsWith('image/') || /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(name)) {
-        return <Image size={16} className="icon image-icon" />;
+        return <Image size={16} className="shrink-0 text-pink-500" />;
     }
-    return <FileText size={16} className="icon file-icon" />;
+    return <FileText size={16} className="shrink-0 text-olive-600" />;
 }
 
 function buildFileTree(files: { id: string; path: string; name: string; mimeType: string }[]): FileTreeItem[] {
@@ -92,30 +91,31 @@ function FileTreeNode({ item, depth, onSelect, onDelete, selectedId }: FileTreeN
     };
 
     return (
-        <div className="file-tree-node">
+        <div>
             <div
-                className={`file-tree-item ${isSelected ? 'selected' : ''}`}
+                className={`flex items-center gap-1.5 py-1.5 px-2 cursor-pointer transition-colors select-none group ${isSelected ? 'bg-olive-200' : 'hover:bg-olive-100'
+                    }`}
                 style={{ paddingLeft: `${depth * 16 + 8}px` }}
                 onClick={handleClick}
             >
                 {item.type === 'folder' && (
-                    <span className="folder-toggle">
+                    <span className="text-olive-400">
                         {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </span>
                 )}
                 {item.type === 'folder' ? (
                     isOpen ? (
-                        <FolderOpen size={16} className="icon folder-icon" />
+                        <FolderOpen size={16} className="shrink-0 text-amber-500" />
                     ) : (
-                        <Folder size={16} className="icon folder-icon" />
+                        <Folder size={16} className="shrink-0 text-amber-500" />
                     )
                 ) : (
                     getFileIcon(item.name, item.mimeType)
                 )}
-                <span className="item-name">{item.name}</span>
+                <span className="flex-1 text-sm truncate text-olive-800">{item.name}</span>
                 {item.type === 'file' && (
                     <button
-                        className="delete-btn"
+                        className="p-1 rounded text-olive-400 hover:bg-red-100 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                         onClick={(e) => {
                             e.stopPropagation();
                             onDelete(item);
@@ -126,7 +126,7 @@ function FileTreeNode({ item, depth, onSelect, onDelete, selectedId }: FileTreeN
                 )}
             </div>
             {item.type === 'folder' && isOpen && item.children && (
-                <div className="file-tree-children">
+                <div>
                     {item.children.map((child) => (
                         <FileTreeNode
                             key={child.id}
@@ -200,47 +200,59 @@ export function FileManager() {
                     id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     path: file.name,
                     name: file.name,
-                    content: isImage ? content : content, // base64 for images, text for others
+                    content: isImage ? content : content,
                     mimeType: file.type || 'application/octet-stream',
                 });
             };
 
             if (file.type.startsWith('image/')) {
-                reader.readAsDataURL(file); // Read images as base64
+                reader.readAsDataURL(file);
             } else {
-                reader.readAsText(file); // Read text files as text
+                reader.readAsText(file);
             }
         }
 
-        // Reset input
         e.target.value = '';
     };
 
     return (
-        <div className="file-manager">
-            <div className="file-manager-header">
-                <span className="header-title">Files</span>
-                <div className="header-actions">
-                    <button className="add-btn" onClick={handleUploadClick} title="Upload file">
+        <div className="flex flex-col h-full bg-white text-olive-800 font-sans border-r border-olive-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-olive-50 border-b border-olive-200">
+                <span className="text-xs font-semibold uppercase tracking-wide text-olive-500">
+                    Files
+                </span>
+                <div className="flex gap-1">
+                    <button
+                        className="flex items-center justify-center w-6 h-6 rounded text-olive-500 hover:bg-olive-200 hover:text-olive-700 transition-colors"
+                        onClick={handleUploadClick}
+                        title="Upload file"
+                    >
                         <Upload size={16} />
                     </button>
-                    <button className="add-btn" onClick={() => setIsCreating(true)} title="New file">
+                    <button
+                        className="flex items-center justify-center w-6 h-6 rounded text-olive-500 hover:bg-olive-200 hover:text-olive-700 transition-colors"
+                        onClick={() => setIsCreating(true)}
+                        title="New file"
+                    >
                         <Plus size={16} />
                     </button>
                 </div>
             </div>
 
+            {/* Hidden file input */}
             <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 accept=".tex,.bib,.sty,.cls,.png,.jpg,.jpeg,.gif,.svg,.webp,.pdf"
-                style={{ display: 'none' }}
+                className="hidden"
                 onChange={handleFileUpload}
             />
 
+            {/* New file input */}
             {isCreating && (
-                <div className="new-file-input">
+                <div className="px-3 py-2 border-b border-olive-200">
                     <input
                         type="text"
                         value={newFileName}
@@ -251,13 +263,21 @@ export function FileManager() {
                         }}
                         placeholder="filename.tex"
                         autoFocus
+                        className="w-full bg-olive-50 border border-olive-200 rounded text-sm text-olive-800 placeholder:text-olive-400 focus:outline-none focus:border-olive-600 transition-all font-medium"
+                        style={{
+                            padding: '0.625rem 0.875rem',
+                            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
+                        }}
                     />
                 </div>
             )}
 
-            <div className="file-tree">
+            {/* File tree */}
+            <div className="flex-1 overflow-y-auto py-2">
                 {tree.length === 0 ? (
-                    <div className="empty-state">No files yet</div>
+                    <div className="flex items-center justify-center h-20 text-olive-400 text-sm">
+                        No files yet
+                    </div>
                 ) : (
                     tree.map((item) => (
                         <FileTreeNode
