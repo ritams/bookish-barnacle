@@ -5,7 +5,6 @@ import {
     Lock,
     Users,
     ArrowRight,
-    Sparkles,
     Github,
     Twitter,
     Code2,
