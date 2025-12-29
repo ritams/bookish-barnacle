@@ -60,6 +60,20 @@ export const api = {
             return { data: await handleResponse(response) };
         },
 
+        getContent: async (id: string) => {
+            const response = await fetch(`${API_BASE_URL}/files/${id}/content`, {
+                headers: getAuthHeaders(),
+            });
+            return { data: await handleResponse(response) };
+        },
+
+        getFull: async (id: string) => {
+            const response = await fetch(`${API_BASE_URL}/files/${id}/full`, {
+                headers: getAuthHeaders(),
+            });
+            return { data: await handleResponse(response) };
+        },
+
         create: async (data: { projectId: string; path: string; name: string; content: string; mimeType: string }) => {
             const response = await fetch(`${API_BASE_URL}/files`, {
                 method: 'POST',
@@ -78,12 +92,88 @@ export const api = {
             return { data: await handleResponse(response) };
         },
 
+        move: async (id: string, newPath: string) => {
+            const response = await fetch(`${API_BASE_URL}/files/${id}/move`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ newPath }),
+            });
+            return { data: await handleResponse(response) };
+        },
+
+        rename: async (id: string, newName: string) => {
+            const response = await fetch(`${API_BASE_URL}/files/${id}/rename`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ newName }),
+            });
+            return { data: await handleResponse(response) };
+        },
+
         delete: async (id: string) => {
             const response = await fetch(`${API_BASE_URL}/files/${id}`, {
                 method: 'DELETE',
                 headers: getAuthHeaders(),
             });
             return { data: await handleResponse(response) };
+        },
+    },
+
+    folders: {
+        list: async (projectId: string) => {
+            const response = await fetch(`${API_BASE_URL}/folders/project/${projectId}`, {
+                headers: getAuthHeaders(),
+            });
+            return { data: await handleResponse(response) };
+        },
+
+        create: async (data: { projectId: string; path: string; name: string }) => {
+            const response = await fetch(`${API_BASE_URL}/folders`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+            return { data: await handleResponse(response) };
+        },
+
+        update: async (id: string, data: { path?: string; name?: string }) => {
+            const response = await fetch(`${API_BASE_URL}/folders/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(data),
+            });
+            return { data: await handleResponse(response) };
+        },
+
+        delete: async (id: string) => {
+            const response = await fetch(`${API_BASE_URL}/folders/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+            });
+            return { data: await handleResponse(response) };
+        },
+    },
+
+    compile: {
+        compile: async (projectId: string, targetFile: string) => {
+            const token = useAuthStore.getState().token;
+            const response = await fetch(`${API_BASE_URL}/compile`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ projectId, targetFile }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.log || errorData.error || 'Compilation failed');
+            }
+
+            // Return the PDF blob
+            const pdfBlob = await response.blob();
+            return { pdf: pdfBlob };
         },
     },
 };

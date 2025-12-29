@@ -34,9 +34,24 @@ model Project {
 
   owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   files         File[]
+  folders       Folder[]
   collaborators Collaborator[]
 
   @@map("projects")
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  path      String   // Full path e.g., "images" or "chapters/intro"
+  name      String   // Folder name (last segment)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, path])
+  @@map("folders")
 }
 
 model File {

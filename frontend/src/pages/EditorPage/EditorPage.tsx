@@ -43,8 +43,8 @@ export function EditorPage() {
     const [showCollaboratorManager, setShowCollaboratorManager] = useState(false);
 
     const {
-        files,
         setFiles,
+        setFolders,
         setCurrentFile,
         setIsCompiling,
         setCompilationError,
@@ -52,8 +52,12 @@ export function EditorPage() {
         setPdfBase64,
         pdfBase64,
         currentFile,
-        isCompiling
+        isCompiling,
+        loadFileContent
     } = useEditorStore();
+
+    // Track target file for compilation (can be set via context menu)
+    const [compileTarget, setCompileTarget] = useState<string>('main.tex');
 
     // Load project and files from API
     useEffect(() => {
@@ -64,9 +68,26 @@ export function EditorPage() {
                 const response = await api.projects.get(projectId);
                 setProject(response.data);
 
+                // Set folders
+                if (response.data.folders) {
+                    setFolders(response.data.folders);
+                }
+
                 if (response.data.files && response.data.files.length > 0) {
-                    setFiles(response.data.files);
-                    setCurrentFile(response.data.files[0]);
+                    // Files come with content: null for lazy loading
+                    setFiles(response.data.files.map((f: { id: string; path: string; name: string; mimeType: string; content: string | null }) => ({
+                        ...f,
+                        isLoaded: false,
+                    })));
+
+                    // Set first file as current and load its content
+                    const firstFile = response.data.files[0];
+                    setCurrentFile({ ...firstFile, isLoaded: false });
+
+                    // Load first file content
+                    if (firstFile.id) {
+                        loadFileContent(firstFile.id);
+                    }
                 } else {
                     // Create default file if none exist
                     const defaultFile = {
@@ -91,6 +112,7 @@ Start writing your document here!
 \\end{document}
 `,
                         mimeType: 'text/x-tex',
+                        isLoaded: true,
                     };
                     setFiles([defaultFile]);
                     setCurrentFile(defaultFile);
@@ -106,19 +128,17 @@ Start writing your document here!
         loadProject();
     }, [projectId]);
 
-    const handleCompile = async () => {
-        if (!currentFile || isCompiling) return;
+    const handleCompile = async (targetFile?: string) => {
+        if (!projectId || isCompiling) return;
+
+        const target = targetFile || compileTarget || currentFile?.path || 'main.tex';
 
         setIsCompiling(true);
         setCompilationError(null);
 
         try {
-            const filesToCompile = files.map(f => ({
-                path: f.path,
-                content: f.content,
-            }));
-
-            const result = await compileLatex(currentFile.path, filesToCompile);
+            // Use new compile API with projectId and targetFile
+            const result = await compileLatex(projectId, target);
 
             if (result.success && result.pdf) {
                 const pdfUrl = URL.createObjectURL(result.pdf);
@@ -137,6 +157,12 @@ Start writing your document here!
         } finally {
             setIsCompiling(false);
         }
+    };
+
+    // Handle compile from FileManager context menu
+    const handleCompileFile = (filePath: string) => {
+        setCompileTarget(filePath);
+        handleCompile(filePath);
     };
 
     const handleDownloadPdf = () => {
@@ -265,7 +291,7 @@ Start writing your document here!
                         initial="initial"
                         whileHover="hover"
                         animate="initial"
-                        onClick={handleCompile}
+                        onClick={() => handleCompile()}
                         disabled={isCompiling}
                         title="Compile LaTeX"
                     >
@@ -300,7 +326,10 @@ Start writing your document here!
             <main className="flex-1 overflow-hidden">
                 <PanelGroup direction="horizontal" autoSaveId="editor-layout">
                     <Panel defaultSize={15} minSize={10} maxSize={25}>
-                        <FileManager />
+                        <FileManager
+                            projectId={projectId}
+                            onCompileFile={handleCompileFile}
+                        />
                     </Panel>
 
                     <PanelResizeHandle className="w-1.5 bg-olive-200 hover:bg-olive-400 active:bg-olive-500 transition-colors cursor-col-resize group">

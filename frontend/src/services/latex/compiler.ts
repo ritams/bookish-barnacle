@@ -1,49 +1,29 @@
 // LaTeX compilation service
-// Uses backend API to compile (which proxies to latexonline.cc)
+// Uses backend API to compile with local pdflatex
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { api } from '../api';
 
 // Compile LaTeX to PDF via backend API
 export const compileLatex = async (
-    mainFile: string,
-    files: { path: string; content: string }[]
+    projectId: string,
+    targetFile: string // Path to the .tex file to compile
 ): Promise<{ success: boolean; pdf?: Blob; log: string }> => {
     try {
-        // Filter out binary files (base64 encoded images)
-        const textFiles = files.filter(f => !f.content.startsWith('data:'));
-
-        // Find the main file, or fall back to first .tex file
-        const targetFile = textFiles.find(f => f.path === mainFile) ||
-            textFiles.find(f => f.path.endsWith('.tex'));
-        const mainContent = targetFile?.content || '';
-
-        if (!mainContent) {
-            return { success: false, log: 'No .tex file found' };
+        if (!projectId) {
+            return { success: false, log: 'No project ID provided' };
         }
 
-        const response = await fetch(`${API_BASE_URL}/compile`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ content: mainContent }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            return {
-                success: false,
-                log: `Compilation failed: ${response.status} ${response.statusText}\n${errorData.details || errorData.error || ''}`
-            };
+        if (!targetFile) {
+            return { success: false, log: 'No target file specified' };
         }
 
-        const pdfBlob = await response.blob();
+        const result = await api.compile.compile(projectId, targetFile);
 
-        if (pdfBlob.size === 0) {
+        if (result.pdf && result.pdf.size > 0) {
+            return { success: true, pdf: result.pdf, log: 'Compilation successful' };
+        } else {
             return { success: false, log: 'Compilation produced no output' };
         }
-
-        return { success: true, pdf: pdfBlob, log: 'Compilation successful' };
     } catch (error) {
         return {
             success: false,

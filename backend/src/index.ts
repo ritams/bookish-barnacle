@@ -6,6 +6,7 @@ import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import projectRoutes from './routes/projects.js';
 import fileRoutes from './routes/files.js';
+import folderRoutes from './routes/folders.js';
 import compileRoutes from './routes/compile.js';
 import collaboratorRoutes from './routes/collaborators.js';
 import { setupCollaborationHandlers } from './routes/collaboration.js';
@@ -43,6 +44,7 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authRoutes);
 app.use('/projects', projectRoutes);
 app.use('/files', fileRoutes);
+app.use('/folders', folderRoutes);
 app.use('/compile', compileRoutes);
 app.use('/', collaboratorRoutes);
 

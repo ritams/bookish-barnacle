@@ -102,7 +102,7 @@ Start writing your document here.
     }
 });
 
-// GET /projects/:id - Get project details
+// GET /projects/:id - Get project details (with lazy loading - files without content)
 router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const project = await prisma.project.findFirst({
@@ -114,7 +114,21 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
                 ]
             },
             include: {
-                files: { orderBy: { path: 'asc' } },
+                files: {
+                    orderBy: { path: 'asc' },
+                    select: {
+                        id: true,
+                        projectId: true,
+                        path: true,
+                        name: true,
+                        mimeType: true,
+                        size: true,
+                        createdAt: true,
+                        updatedAt: true
+                        // content excluded for lazy loading
+                    }
+                },
+                folders: { orderBy: { path: 'asc' } },
                 owner: { select: { id: true, name: true, email: true } },
                 collaborators: {
                     include: { user: { select: { id: true, name: true, email: true } } }
@@ -131,7 +145,8 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
             ...project,
             files: project.files.map(f => ({
                 ...f,
-                size: f.size.toString()
+                size: f.size.toString(),
+                content: null // Lazy loading indicator
             }))
         });
     } catch (error) {
