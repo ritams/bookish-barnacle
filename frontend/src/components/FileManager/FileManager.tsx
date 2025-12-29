@@ -224,6 +224,7 @@ interface ContextMenuProps {
 
 function ContextMenu({ state, onClose, onRename, onMove, onDelete, onCompile }: ContextMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
+    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -241,6 +242,39 @@ function ContextMenu({ state, onClose, onRename, onMove, onDelete, onCompile }: 
         };
     }, [state.visible, onClose]);
 
+    // Calculate position to keep menu within viewport
+    useEffect(() => {
+        if (!state.visible || !menuRef.current) {
+            setMenuPosition({ x: state.x, y: state.y });
+            return;
+        }
+
+        const menu = menuRef.current;
+        const menuRect = menu.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        let x = state.x;
+        let y = state.y;
+
+        // If menu would overflow bottom, flip it upward
+        if (state.y + menuRect.height > viewportHeight - 10) {
+            y = state.y - menuRect.height;
+        }
+
+        // If menu would overflow right, flip it leftward
+        if (state.x + menuRect.width > viewportWidth - 10) {
+            x = state.x - menuRect.width;
+        }
+
+        // Ensure menu doesn't go above viewport
+        if (y < 10) y = 10;
+        // Ensure menu doesn't go off left side
+        if (x < 10) x = 10;
+
+        setMenuPosition({ x, y });
+    }, [state.visible, state.x, state.y]);
+
     if (!state.visible || !state.item) return null;
 
     const isTexFile = state.item.type === 'file' && state.item.name.endsWith('.tex');
@@ -248,50 +282,50 @@ function ContextMenu({ state, onClose, onRename, onMove, onDelete, onCompile }: 
     return (
         <div
             ref={menuRef}
-            className="fixed z-50 bg-white border border-olive-200 rounded-lg shadow-lg py-1 min-w-[160px]"
-            style={{ left: state.x, top: state.y }}
+            className="fixed z-[9999] bg-white border border-olive-200 rounded-xl shadow-xl py-2 min-w-[180px]"
+            style={{ left: menuPosition.x, top: menuPosition.y }}
         >
             {isTexFile && (
                 <button
-                    className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-olive-100 text-olive-800"
+                    className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-olive-100 text-olive-800"
                     onClick={() => {
                         onCompile(state.item!);
                         onClose();
                     }}
                 >
-                    <Play size={14} className="text-green-600" />
+                    <Play size={16} className="text-green-600" />
                     Compile
                 </button>
             )}
             <button
-                className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-olive-100 text-olive-800"
+                className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-olive-100 text-olive-800"
                 onClick={() => {
                     onRename(state.item!);
                     onClose();
                 }}
             >
-                <Edit3 size={14} />
+                <Edit3 size={16} />
                 Rename
             </button>
             <button
-                className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-olive-100 text-olive-800"
+                className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-olive-100 text-olive-800"
                 onClick={() => {
                     onMove(state.item!);
                     onClose();
                 }}
             >
-                <Move size={14} />
+                <Move size={16} />
                 Move
             </button>
-            <div className="border-t border-olive-200 my-1" />
+            <div className="border-t border-olive-200 my-1.5 mx-2" />
             <button
-                className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-red-50 text-red-600"
+                className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-red-50 text-red-600"
                 onClick={() => {
                     onDelete(state.item!);
                     onClose();
                 }}
             >
-                <Trash2 size={14} />
+                <Trash2 size={16} />
                 Delete
             </button>
         </div>
@@ -335,8 +369,24 @@ export function FileManager({ projectId, onCompileFile }: FileManagerProps) {
     const [newPath, setNewPath] = useState('');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const folderInputRef = useRef<HTMLInputElement>(null);
+    const [showUploadMenu, setShowUploadMenu] = useState(false);
+    const uploadMenuRef = useRef<HTMLDivElement>(null);
 
     const tree = buildFileTree(files, folders);
+
+    // Close upload menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (uploadMenuRef.current && !uploadMenuRef.current.contains(e.target as Node)) {
+                setShowUploadMenu(false);
+            }
+        };
+        if (showUploadMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showUploadMenu]);
 
     // Get active directory based on expanded paths
     const getActiveDirectory = (): string => {
@@ -611,6 +661,101 @@ export function FileManager({ projectId, onCompileFile }: FileManagerProps) {
         e.target.value = '';
     };
 
+    const handleFolderUploadClick = () => {
+        folderInputRef.current?.click();
+    };
+
+    const handleFolderUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const uploadedFiles = e.target.files;
+        if (!uploadedFiles || uploadedFiles.length === 0) return;
+
+        const activeDir = getActiveDirectory();
+        const createdFolders = new Set<string>();
+
+        for (const file of Array.from(uploadedFiles)) {
+            // webkitRelativePath gives us the full path including folder structure
+            const relativePath = (file as any).webkitRelativePath || file.name;
+
+            // Build the full path with optional active directory prefix
+            let fullPath = activeDir ? `${activeDir}/${relativePath}` : relativePath;
+            fullPath = fullPath.replace(/^\/+/, '');
+
+            // Extract and create folder structure
+            const pathParts = fullPath.split('/');
+            if (pathParts.length > 1) {
+                // Create all parent folders
+                let folderPath = '';
+                for (let i = 0; i < pathParts.length - 1; i++) {
+                    folderPath = folderPath ? `${folderPath}/${pathParts[i]}` : pathParts[i];
+
+                    if (!createdFolders.has(folderPath) && projectId) {
+                        createdFolders.add(folderPath);
+                        try {
+                            const folderName = pathParts[i];
+                            const response = await api.folders.create({
+                                projectId,
+                                path: folderPath,
+                                name: folderName,
+                            });
+                            addFolder(response.data);
+                            handleToggleExpand(folderPath, true);
+                        } catch (error) {
+                            // Folder might already exist, that's ok
+                            console.log('Folder may already exist:', folderPath);
+                        }
+                    }
+                }
+            }
+
+            // Read and upload the file
+            const reader = new FileReader();
+            const fileName = pathParts[pathParts.length - 1];
+
+            reader.onload = async () => {
+                const content = reader.result as string;
+
+                try {
+                    if (projectId) {
+                        const response = await api.files.create({
+                            projectId,
+                            path: fullPath,
+                            name: fileName,
+                            content: content,
+                            mimeType: file.type || 'application/octet-stream',
+                        });
+                        addFile({
+                            ...response.data,
+                            isLoaded: true,
+                        });
+                    } else {
+                        addFile({
+                            id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            path: fullPath,
+                            name: fileName,
+                            content: content,
+                            mimeType: file.type || 'application/octet-stream',
+                            isLoaded: true,
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to upload file:', error);
+                }
+            };
+
+            const isBinary = file.type.startsWith('image/') ||
+                file.type === 'application/pdf' ||
+                /\.(pdf|png|jpe?g|gif|svg|webp|eot|ttf|woff|woff2|otf)$/i.test(file.name);
+
+            if (isBinary) {
+                reader.readAsDataURL(file);
+            } else {
+                reader.readAsText(file);
+            }
+        }
+
+        e.target.value = '';
+    };
+
     return (
         <div className="flex flex-col h-full bg-white text-olive-800 font-sans border-r border-olive-200">
             {/* Header */}
@@ -619,13 +764,40 @@ export function FileManager({ projectId, onCompileFile }: FileManagerProps) {
                     Files
                 </span>
                 <div className="flex gap-1">
-                    <button
-                        className="flex items-center justify-center w-6 h-6 rounded text-olive-500 hover:bg-olive-200 hover:text-olive-700 transition-colors"
-                        onClick={handleUploadClick}
-                        title="Upload file"
-                    >
-                        <Upload size={16} />
-                    </button>
+                    {/* Unified upload button with dropdown */}
+                    <div className="relative" ref={uploadMenuRef}>
+                        <button
+                            className="flex items-center justify-center w-6 h-6 rounded text-olive-500 hover:bg-olive-200 hover:text-olive-700 transition-colors"
+                            onClick={() => setShowUploadMenu(!showUploadMenu)}
+                            title="Upload"
+                        >
+                            <Upload size={16} />
+                        </button>
+                        {showUploadMenu && (
+                            <div className="absolute right-0 top-full mt-1 bg-white border border-olive-200 rounded-lg shadow-lg py-1 min-w-[140px] z-50">
+                                <button
+                                    className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-olive-100 text-olive-800"
+                                    onClick={() => {
+                                        handleUploadClick();
+                                        setShowUploadMenu(false);
+                                    }}
+                                >
+                                    <FileText size={14} />
+                                    Upload Files
+                                </button>
+                                <button
+                                    className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-olive-100 text-olive-800"
+                                    onClick={() => {
+                                        handleFolderUploadClick();
+                                        setShowUploadMenu(false);
+                                    }}
+                                >
+                                    <Folder size={14} />
+                                    Upload Folder
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <button
                         className="flex items-center justify-center w-6 h-6 rounded text-olive-500 hover:bg-olive-200 hover:text-olive-700 transition-colors"
                         onClick={() => setIsCreatingFolder(true)}
@@ -650,6 +822,17 @@ export function FileManager({ projectId, onCompileFile }: FileManagerProps) {
                 multiple
                 className="hidden"
                 onChange={handleFileUpload}
+            />
+
+            {/* Hidden folder input for directory upload */}
+            <input
+                ref={folderInputRef}
+                type="file"
+                // @ts-ignore - webkitdirectory is not in the standard HTML spec but works in modern browsers
+                webkitdirectory="true"
+                multiple
+                className="hidden"
+                onChange={handleFolderUpload}
             />
 
             {/* New file input */}

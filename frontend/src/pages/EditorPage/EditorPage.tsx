@@ -56,9 +56,6 @@ export function EditorPage() {
         loadFileContent
     } = useEditorStore();
 
-    // Track target file for compilation (can be set via context menu)
-    const [compileTarget, setCompileTarget] = useState<string>('main.tex');
-
     // Load project and files from API
     useEffect(() => {
         if (!projectId) return;
@@ -141,7 +138,27 @@ Start writing your document here!
     const handleCompile = async (targetFile?: string) => {
         if (!projectId || isCompiling) return;
 
-        const target = targetFile || compileTarget || currentFile?.path || 'main.tex';
+        // Determine what file to compile
+        let target = targetFile;
+
+        if (!target) {
+            // If current file is a tex file, compile it
+            if (currentFile?.path?.endsWith('.tex')) {
+                target = currentFile.path;
+            } else {
+                // Check if main.tex exists in the project files
+                const files = useEditorStore.getState().files;
+                const mainTexFile = files.find(f => f.path === 'main.tex' || f.name === 'main.tex');
+
+                if (mainTexFile) {
+                    target = mainTexFile.path;
+                } else {
+                    // No tex file to compile
+                    setCompilationError('No .tex file selected. Open a .tex file in the editor or create a main.tex file.');
+                    return;
+                }
+            }
+        }
 
         setIsCompiling(true);
         setCompilationError(null);
@@ -171,7 +188,6 @@ Start writing your document here!
 
     // Handle compile from FileManager context menu
     const handleCompileFile = (filePath: string) => {
-        setCompileTarget(filePath);
         handleCompile(filePath);
     };
 
