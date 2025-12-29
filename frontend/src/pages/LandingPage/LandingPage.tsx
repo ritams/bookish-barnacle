@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-    FileText,
     Zap,
     Lock,
     Users,
@@ -12,8 +11,10 @@ import {
     Code2,
     CheckCircle2,
     Star,
-    Globe
+    Globe,
+    FileText
 } from 'lucide-react';
+import { Logo } from '../../components/Logo';
 
 // Animation variants
 const fadeInUp = {
@@ -135,19 +136,7 @@ export function LandingPage() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
             >
                 <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-3 group">
-                        <motion.div
-                            className="w-10 h-10 bg-gradient-to-br from-olive-600 to-olive-700 rounded-xl flex items-center justify-center shadow-lg shadow-olive-300/30 group-hover:shadow-olive-400/40 transition-shadow"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <FileText size={20} className="text-white" />
-                        </motion.div>
-                        <span className="text-2xl font-bold">
-                            <span className="text-olive-900">LaTeX</span>
-                            <span className="text-olive-600">Studio</span>
-                        </span>
-                    </Link>
+                    <Logo size="md" linkTo="/" animate={true} />
                     <nav className="flex items-center gap-3">
                         <Link
                             to="/login"
@@ -455,11 +444,8 @@ export function LandingPage() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         {/* Brand */}
                         <div className="md:col-span-2">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 bg-olive-700 rounded-xl flex items-center justify-center">
-                                    <FileText size={20} className="text-olive-300" />
-                                </div>
-                                <span className="text-xl font-bold text-white">LaTeX Studio</span>
+                            <div className="mb-4">
+                                <Logo size="md" variant="dark" showText={true} animate={false} />
                             </div>
                             <p className="text-olive-400 max-w-sm mb-6">
                                 The modern way to write LaTeX documents. Beautiful, fast, and free.

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, FileText, Trash2, LogOut, FolderOpen, Search, X, Sparkles, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { api } from '../../services/api';
+import { Logo } from '../../components/Logo';
 
 interface Project {
     id: string;
@@ -143,27 +144,7 @@ export function ProjectsPage() {
                     margin: '0 auto',
                     width: '100%'
                 }}>
-                    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', textDecoration: 'none' }}>
-                        <motion.div
-                            style={{
-                                width: '2.25rem',
-                                height: '2.25rem',
-                                background: 'linear-gradient(135deg, #687549 0%, #525c3a 100%)',
-                                borderRadius: '0.75rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 4px 6px -1px rgba(82, 92, 58, 0.2)'
-                            }}
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                        >
-                            <FileText size={17} color="white" />
-                        </motion.div>
-                        <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                            <span style={{ color: '#3a3f2c' }}>LaTeX</span>
-                            <span style={{ color: '#687549' }}>Studio</span>
-                        </span>
-                    </Link>
+                    <Logo size="md" linkTo="/" animate={true} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div className="user-menu-container" style={{ position: 'relative' }}>
                             <motion.button

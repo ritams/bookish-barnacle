@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { Play, Loader2, ArrowLeft, FileText, Download, CheckCircle2 } from 'lucide-react';
+import { Play, Loader2, ArrowLeft, Download, CheckCircle2 } from 'lucide-react';
 import { Editor } from '../../components/Editor';
 import { FileManager } from '../../components/FileManager';
 import { PDFViewer } from '../../components/PDFViewer';
 import { useEditorStore } from '../../stores/editorStore';
 import { compileLatex } from '../../services/latex';
 import { api } from '../../services/api';
+import { LogoIcon } from '../../components/Logo';
 
 // Helper to convert Blob to base64
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -191,8 +192,8 @@ Start writing your document here!
                         </Link>
                     </motion.div>
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-olive-500 to-olive-600 rounded-lg flex items-center justify-center shadow-md">
-                            <FileText size={16} className="text-white" />
+                        <div className="w-9 h-9 overflow-hidden rounded-lg shadow-md">
+                            <LogoIcon style={{ width: '100%', height: '100%' }} />
                         </div>
                         <div>
                             <span className="text-base font-semibold text-olive-800 block leading-tight">

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowLeft, FileText, Loader2, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { Logo } from '../../components/Logo';
 
 // Animation variants
 const fadeInUp = {
@@ -135,24 +136,7 @@ export function AuthPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.5rem', fontWeight: 700, color: 'white', textDecoration: 'none' }}>
-                        <motion.div
-                            style={{
-                                width: '2.75rem',
-                                height: '2.75rem',
-                                background: 'rgba(255,255,255,0.2)',
-                                backdropFilter: 'blur(10px)',
-                                borderRadius: '0.75rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                        >
-                            <FileText size={22} color="white" />
-                        </motion.div>
-                        <span>LaTeX Studio</span>
-                    </Link>
+                    <Logo size="lg" linkTo="/" variant="dark" animate={true} />
                 </motion.div>
 
                 <motion.div
@@ -256,13 +240,10 @@ export function AuthPage() {
                     {/* Mobile Logo */}
                     <motion.div
                         className="lg:hidden"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '1.25rem', fontWeight: 700, marginBottom: '2rem' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}
                         variants={fadeInUp}
                     >
-                        <div style={{ width: '2.25rem', height: '2.25rem', background: '#525c3a', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <FileText size={18} color="white" />
-                        </div>
-                        <span style={{ color: '#3a3f2c' }}>LaTeX Studio</span>
+                        <Logo size="md" variant="light" animate={false} />
                     </motion.div>
 
                     <motion.div
