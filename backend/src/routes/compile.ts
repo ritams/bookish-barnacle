@@ -13,7 +13,8 @@ router.use(authMiddleware);
 // Validation schema
 const compileSchema = z.object({
     projectId: z.string().uuid(),
-    targetFile: z.string().min(1).default('main.tex')
+    targetFile: z.string().min(1).default('main.tex'),
+    cleanCompile: z.boolean().optional().default(false)
 });
 
 // Helper to check project access
@@ -33,7 +34,7 @@ async function checkProjectAccess(projectId: string, userId: string): Promise<bo
 // POST /compile - Compile LaTeX to PDF using local pdflatex
 router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { projectId, targetFile } = compileSchema.parse(req.body);
+        const { projectId, targetFile, cleanCompile } = compileSchema.parse(req.body);
 
         // Check access
         const hasAccess = await checkProjectAccess(projectId, req.userId!);
@@ -42,9 +43,9 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        console.log(`Compiling project ${projectId}, target: ${targetFile}`);
+        console.log(`Compiling project ${projectId}, target: ${targetFile}, clean: ${cleanCompile}`);
 
-        const result = await compileProject({ projectId, targetFile });
+        const result = await compileProject({ projectId, targetFile, cleanCompile });
 
         if (result.success && result.pdf) {
             // Send PDF

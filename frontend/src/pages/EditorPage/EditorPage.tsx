@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { Play, Loader2, ArrowLeft, Download, CheckCircle2, Share } from 'lucide-react';
+import { Play, Loader2, ArrowLeft, Download, CheckCircle2, Share, RefreshCw } from 'lucide-react';
 import { Editor } from '../../components/Editor';
 import { FileManager } from '../../components/FileManager';
 import { PDFViewer } from '../../components/PDFViewer';
@@ -135,7 +135,7 @@ Start writing your document here!
         loadProject();
     }, [projectId]);
 
-    const handleCompile = async (targetFile?: string) => {
+    const handleCompile = async (targetFile?: string, cleanCompile: boolean = false) => {
         if (!projectId || isCompiling) return;
 
         // Determine what file to compile
@@ -165,7 +165,7 @@ Start writing your document here!
 
         try {
             // Use new compile API with projectId and targetFile
-            const result = await compileLatex(projectId, target);
+            const result = await compileLatex(projectId, target, cleanCompile);
 
             if (result.success && result.pdf) {
                 const pdfUrl = URL.createObjectURL(result.pdf);
@@ -309,6 +309,19 @@ Start writing your document here!
                         >
                             Share
                         </motion.span>
+                    </motion.button>
+
+                    {/* Clean Compile Button */}
+                    <motion.button
+                        className="flex items-center justify-center w-10 h-10 bg-olive-100 text-olive-700 border border-olive-200 rounded-xl hover:bg-olive-200 hover:border-olive-300 transition-colors"
+                        initial="initial"
+                        whileHover="hover"
+                        animate="initial"
+                        onClick={() => handleCompile(undefined, true)}
+                        disabled={isCompiling}
+                        title="Recompile from scratch (Clean Cache)"
+                    >
+                        <RefreshCw size={18} className={isCompiling ? 'animate-spin' : ''} />
                     </motion.button>
 
                     <motion.button

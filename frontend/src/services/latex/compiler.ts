@@ -6,7 +6,8 @@ import { api } from '../api';
 // Compile LaTeX to PDF via backend API
 export const compileLatex = async (
     projectId: string,
-    targetFile: string // Path to the .tex file to compile
+    targetFile: string, // Path to the .tex file to compile
+    cleanCompile?: boolean // If true, force recompile from scratch
 ): Promise<{ success: boolean; pdf?: Blob; log: string }> => {
     try {
         if (!projectId) {
@@ -17,7 +18,7 @@ export const compileLatex = async (
             return { success: false, log: 'No target file specified' };
         }
 
-        const result = await api.compile.compile(projectId, targetFile);
+        const result = await api.compile.compile(projectId, targetFile, cleanCompile);
 
         if (result.pdf && result.pdf.size > 0) {
             return { success: true, pdf: result.pdf, log: 'Compilation successful' };

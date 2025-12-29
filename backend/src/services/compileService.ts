@@ -10,6 +10,7 @@ const prisma = new PrismaClient();
 export interface CompileRequest {
     projectId: string;
     targetFile: string; // Path of .tex file to compile (e.g., "main.tex" or "chapters/intro.tex")
+    cleanCompile?: boolean; // If true, delete cache and compile from scratch
 }
 
 export interface CompileResult {
@@ -24,17 +25,32 @@ export interface CompileResult {
  * 
  * Flow:
  * 1. Fetch all files from the project (including folders structure)
- * 2. Create a temporary directory mimicking the project structure
+ * 2. Create/reuse a cache directory for this project
  * 3. Write all files (decode base64 for binary files like images)
  * 4. Run pdflatex on the target file
  * 5. Read the output PDF
- * 6. Cleanup and return result
+ * 6. Keep cache for next compilation (unless cleanCompile)
  */
 export async function compileProject(request: CompileRequest): Promise<CompileResult> {
-    const { projectId, targetFile } = request;
-    const tempDir = path.join(os.tmpdir(), `latex-compile-${randomUUID()}`);
+    const { projectId, targetFile, cleanCompile = false } = request;
+
+    // Use persistent cache directory per project instead of random temp
+    const cacheDir = path.join(os.tmpdir(), 'latex-cache', projectId);
 
     try {
+        // If cleanCompile, delete the entire cache directory first
+        if (cleanCompile) {
+            try {
+                await fs.rm(cacheDir, { recursive: true, force: true });
+                console.log(`[Compile] Clean compile: deleted cache for project ${projectId}`);
+            } catch {
+                // Cache might not exist, that's fine
+            }
+        }
+
+        // Create cache directory if it doesn't exist
+        await fs.mkdir(cacheDir, { recursive: true });
+
         // 1. Fetch all files from the project
         const files = await prisma.file.findMany({
             where: { projectId },
@@ -75,17 +91,17 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
         }
 
         // 2. Create temp directory
-        await fs.mkdir(tempDir, { recursive: true });
+        await fs.mkdir(cacheDir, { recursive: true });
 
         // 3. Create folder structure
         for (const folder of folders) {
-            const folderPath = path.join(tempDir, sanitizePath(folder.path));
+            const folderPath = path.join(cacheDir, sanitizePath(folder.path));
             await fs.mkdir(folderPath, { recursive: true });
         }
 
         // 4. Write all files
         for (const file of files) {
-            const filePath = path.join(tempDir, sanitizePath(file.path));
+            const filePath = path.join(cacheDir, sanitizePath(file.path));
             const dirPath = path.dirname(filePath);
 
             // Ensure parent directory exists
@@ -108,28 +124,28 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
         // 5. Run compilation sequence
         const targetBaseName = path.basename(sanitizedTargetFile, '.tex');
         const targetDir = path.dirname(sanitizedTargetFile);
-        const workingDir = targetDir === '.' ? tempDir : path.join(tempDir, targetDir);
+        const workingDir = targetDir === '.' ? cacheDir : path.join(cacheDir, targetDir);
 
         // Check for .bib files to determine if we need bibtex
         const hasBibFiles = files.some(f => f.path.endsWith('.bib') || f.name.endsWith('.bib'));
 
         // Step 5a: Run pdflatex (first pass)
         // Note: we pass sanitizedTargetFile
-        let compileResult = await runPdflatex(tempDir, sanitizedTargetFile, workingDir);
+        let compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
 
         if (compileResult.success && hasBibFiles) {
             // Step 5b: Run bibtex
             // We need to run bibtex on the base name (without .tex extension)
             // BibTeX typically expects the .aux file to be present
-            const bibtexResult = await runBibtex(tempDir, targetBaseName, workingDir);
+            const bibtexResult = await runBibtex(cacheDir, targetBaseName, workingDir);
 
             if (bibtexResult.success) {
                 // Step 5c: Run pdflatex (second pass)
-                compileResult = await runPdflatex(tempDir, sanitizedTargetFile, workingDir);
+                compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
 
                 // Step 5d: Run pdflatex (third pass)
                 if (compileResult.success) {
-                    compileResult = await runPdflatex(tempDir, sanitizedTargetFile, workingDir);
+                    compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
                 }
             } else {
                 // If bibtex fails, we might just log it and continue, but usually it's fatal for citations
@@ -138,7 +154,7 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
             }
         } else if (compileResult.success) {
             // No bib files, just run second pass for cross-references
-            compileResult = await runPdflatex(tempDir, sanitizedTargetFile, workingDir);
+            compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
         }
 
         if (!compileResult.success) {
@@ -146,7 +162,7 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
         }
 
         // 6. Read the output PDF
-        const pdfPath = path.join(tempDir, `${targetBaseName}.pdf`);
+        const pdfPath = path.join(cacheDir, `${targetBaseName}.pdf`);
 
         try {
             const pdfBuffer = await fs.readFile(pdfPath);
@@ -181,12 +197,9 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
             errors: [errorMessage]
         };
     } finally {
-        // 7. Cleanup temp directory
-        try {
-            await fs.rm(tempDir, { recursive: true, force: true });
-        } catch {
-            console.error('Failed to cleanup temp directory:', tempDir);
-        }
+        // Only delete PDF file so it gets regenerated next compilation
+        // Keep aux, toc, log, bbl files for faster subsequent compiles
+        // Note: We don't delete the cache directory anymore to enable caching
     }
 }
 

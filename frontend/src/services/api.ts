@@ -155,7 +155,7 @@ export const api = {
     },
 
     compile: {
-        compile: async (projectId: string, targetFile: string) => {
+        compile: async (projectId: string, targetFile: string, cleanCompile?: boolean) => {
             const token = useAuthStore.getState().token;
             const response = await fetch(`${API_BASE_URL}/compile`, {
                 method: 'POST',
@@ -163,7 +163,7 @@ export const api = {
                     'Content-Type': 'application/json',
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
-                body: JSON.stringify({ projectId, targetFile }),
+                body: JSON.stringify({ projectId, targetFile, cleanCompile }),
             });
 
             if (!response.ok) {
