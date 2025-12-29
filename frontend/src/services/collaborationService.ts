@@ -1,7 +1,10 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../stores/authStore';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Socket.io needs the base URL without /api path
+const SOCKET_URL = import.meta.env.VITE_WS_URL ||
+    (import.meta.env.VITE_API_URL?.replace(/\/api$/, '')) ||
+    'http://localhost:3001';
 
 let socket: Socket | null = null;
 
@@ -15,7 +18,7 @@ export function connectSocket(): Socket {
     }
 
     const { user, token } = useAuthStore.getState();
-    
+
     console.log('[Socket] Connecting with user:', user);
     console.log('[Socket] Connecting with token:', token ? 'Bearer [REDACTED]' : 'No token');
 
