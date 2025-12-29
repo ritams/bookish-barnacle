@@ -16,6 +16,7 @@
     "@codemirror/language": "^6.12.1",
     "@codemirror/state": "^6.5.3",
     "@codemirror/view": "^6.39.7",
+    "@react-oauth/google": "^0.13.4",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
     "codemirror-lang-latex": "^0.2.0",

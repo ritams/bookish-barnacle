@@ -5,7 +5,8 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { syntaxHighlighting, defaultHighlightStyle, bracketMatching, foldGutter, indentOnInput } from '@codemirror/language';
 import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { latex } from 'codemirror-lang-latex';
-import { ArrowUpFromLine, Loader2, Check, Users } from 'lucide-react';
+import { ArrowUpFromLine, Loader2, Check, Users, ZoomIn, ZoomOut } from 'lucide-react';
+import * as pdfjs from 'pdfjs-dist';
 import { toast } from 'sonner';
 import { useEditorStore } from '../../stores/editorStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -63,6 +64,144 @@ interface EditorProps {
     onChange?: (content: string) => void;
     projectId?: string;
     fileId?: string;
+}
+
+// Inline PDF Viewer component for displaying uploaded PDFs
+function InlinePDFViewer({ fileName, pdfDataUrl }: { fileName: string; pdfDataUrl: string | null }) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(1.2);
+    const [totalPages, setTotalPages] = useState(0);
+    const [pdfDoc, setPdfDoc] = useState<pdfjs.PDFDocumentProxy | null>(null);
+    const [renderedPages, setRenderedPages] = useState<HTMLCanvasElement[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (!pdfDataUrl) return;
+
+        const loadPdf = async () => {
+            setIsLoading(true);
+            try {
+                const doc = await pdfjs.getDocument(pdfDataUrl).promise;
+                setPdfDoc(doc);
+                setTotalPages(doc.numPages);
+            } catch (error) {
+                console.error('Failed to load PDF:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadPdf();
+
+        return () => {
+            pdfDoc?.destroy();
+        };
+    }, [pdfDataUrl]);
+
+    useEffect(() => {
+        if (!pdfDoc) return;
+
+        const renderAllPages = async () => {
+            const canvases: HTMLCanvasElement[] = [];
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale });
+
+                const dpr = window.devicePixelRatio || 1;
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d')!;
+
+                canvas.height = viewport.height * dpr;
+                canvas.width = viewport.width * dpr;
+                canvas.style.width = `${viewport.width}px`;
+                canvas.style.height = `${viewport.height}px`;
+                canvas.className = 'shadow-xl rounded flex-shrink-0';
+
+                context.scale(dpr, dpr);
+
+                await page.render({
+                    canvasContext: context,
+                    viewport,
+                    canvas: canvas,
+                }).promise;
+
+                canvases.push(canvas);
+            }
+
+            setRenderedPages(canvases);
+        };
+
+        renderAllPages();
+    }, [pdfDoc, scale]);
+
+    useEffect(() => {
+        if (!containerRef.current || renderedPages.length === 0) return;
+        containerRef.current.innerHTML = '';
+        renderedPages.forEach((canvas) => {
+            containerRef.current!.appendChild(canvas);
+        });
+    }, [renderedPages]);
+
+    const handleZoomIn = () => setScale((s) => Math.min(s + 0.2, 3));
+    const handleZoomOut = () => setScale((s) => Math.max(s - 0.2, 0.4));
+
+    if (!pdfDataUrl) {
+        return (
+            <div className="flex flex-col h-full bg-olive-100">
+                <div className="flex-1 flex items-center justify-center text-olive-500">
+                    <span>No PDF content available</span>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col h-full bg-white text-olive-800">
+            {/* Header with filename and controls */}
+            <div className="flex items-center justify-between px-4 py-2 bg-olive-50 border-b border-olive-200 min-h-[40px]">
+                <span className="text-sm font-medium text-olive-700">{fileName}</span>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleZoomOut}
+                            title="Zoom Out"
+                            className="flex items-center justify-center w-7 h-7 border border-olive-200 rounded-md text-olive-700 hover:bg-olive-100 transition-colors"
+                        >
+                            <ZoomOut size={16} />
+                        </button>
+                        <span className="min-w-[50px] text-center text-xs text-olive-600">
+                            {Math.round(scale * 100)}%
+                        </span>
+                        <button
+                            onClick={handleZoomIn}
+                            title="Zoom In"
+                            className="flex items-center justify-center w-7 h-7 border border-olive-200 rounded-md text-olive-700 hover:bg-olive-100 transition-colors"
+                        >
+                            <ZoomIn size={16} />
+                        </button>
+                    </div>
+                    {totalPages > 0 && (
+                        <span className="text-xs text-olive-500">
+                            {totalPages} page{totalPages !== 1 ? 's' : ''}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* PDF Container */}
+            {isLoading ? (
+                <div className="flex-1 flex items-center justify-center bg-olive-100">
+                    <Loader2 size={24} className="animate-spin text-olive-500" />
+                </div>
+            ) : (
+                <div
+                    ref={containerRef}
+                    className="flex-1 min-h-0 flex flex-col items-center gap-4 p-6 overflow-y-auto bg-olive-100"
+                />
+            )}
+        </div>
+    );
 }
 
 export function Editor({ initialContent = '', onChange, projectId, fileId }: EditorProps) {
@@ -127,6 +266,10 @@ export function Editor({ initialContent = '', onChange, projectId, fileId }: Edi
     // Check if current file is an image
     const isImage = currentFile?.mimeType?.startsWith('image/') ||
         /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(currentFile?.name || '');
+
+    // Check if current file is a PDF
+    const isPdf = currentFile?.mimeType === 'application/pdf' ||
+        /\.pdf$/i.test(currentFile?.name || '');
 
     const handleChange = useCallback(
         (content: string) => {
@@ -269,19 +412,19 @@ export function Editor({ initialContent = '', onChange, projectId, fileId }: Edi
 
     // Update content when file changes (only for non-collaborative mode)
     useEffect(() => {
-        if (viewRef.current && currentFile && !isImage && !collaboration.doc) {
+        if (viewRef.current && currentFile && !isImage && !isPdf && !collaboration.doc) {
             const currentContent = viewRef.current.state.doc.toString();
             if (currentContent !== currentFile.content) {
                 viewRef.current.dispatch({
                     changes: {
                         from: 0,
                         to: currentContent.length,
-                        insert: currentFile.content,
+                        insert: currentFile.content || '',
                     },
                 });
             }
         }
-    }, [currentFile?.id, isImage, collaboration.doc]);
+    }, [currentFile?.id, isImage, isPdf, collaboration.doc]);
 
     // Render image preview for image files
     if (isImage && currentFile) {
@@ -292,13 +435,18 @@ export function Editor({ initialContent = '', onChange, projectId, fileId }: Edi
                 </div>
                 <div className="flex-1 flex items-center justify-center bg-olive-50 p-5 overflow-auto">
                     <img
-                        src={currentFile.content}
+                        src={currentFile.content || ''}
                         alt={currentFile.name}
                         className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
                     />
                 </div>
             </div>
         );
+    }
+
+    // Render PDF preview for PDF files using pdf.js
+    if (isPdf && currentFile) {
+        return <InlinePDFViewer fileName={currentFile.name} pdfDataUrl={currentFile.content} />
     }
 
     return (

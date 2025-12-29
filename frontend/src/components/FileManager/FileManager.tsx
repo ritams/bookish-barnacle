@@ -364,6 +364,10 @@ export function FileManager({ projectId, onCompileFile }: FileManagerProps) {
             const file = files.find((f) => f.id === item.id);
             if (file) {
                 setCurrentFile(file);
+                // Track last opened file for this project
+                if (projectId) {
+                    useEditorStore.getState().setLastOpenedFile(projectId, file.id);
+                }
                 // Lazy load content if not loaded
                 if (!file.isLoaded && file.content === null) {
                     await loadFileContent(file.id);

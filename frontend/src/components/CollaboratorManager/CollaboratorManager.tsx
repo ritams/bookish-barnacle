@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Mail, Shield, ShieldOff, Trash2, Loader2, Check, Link as LinkIcon } from 'lucide-react';
-import { collaboratorsApi, type Collaborator, type AddCollaboratorRequest } from '../../services/collaboratorsApi';
-import { useAuthStore } from '../../stores/authStore';
+import { X, UserPlus, Crown, Pencil, Eye, Trash2, Loader2, Mail, Check } from 'lucide-react';
+import { collaboratorsApi } from '../../services/collaboratorsApi';
+import type { Collaborator } from '../../services/collaboratorsApi';
 
 interface CollaboratorManagerProps {
     projectId: string;
@@ -11,18 +11,13 @@ interface CollaboratorManagerProps {
 }
 
 export function CollaboratorManager({ projectId, isOpen, onClose }: CollaboratorManagerProps) {
-    const { user: currentUser } = useAuthStore();
     const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isAdding, setIsAdding] = useState(false);
-    const [emailInput, setEmailInput] = useState('');
-    const [isValidatingEmail, setIsValidatingEmail] = useState(false);
-    const [emailError, setEmailError] = useState('');
-    const [newRole, setNewRole] = useState<'editor' | 'viewer'>('editor');
-    const [showSuccess, setShowSuccess] = useState(false);
-
-    // Check if current user is the owner
-    const isOwner = collaborators.some(c => c.user.id === currentUser?.id && c.role === 'owner');
+    const [email, setEmail] = useState('');
+    const [role, setRole] = useState<'editor' | 'viewer'>('editor');
+    const [isInviting, setIsInviting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     useEffect(() => {
         if (isOpen && projectId) {
@@ -30,136 +25,71 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
         }
     }, [isOpen, projectId]);
 
-
     const loadCollaborators = async () => {
+        setIsLoading(true);
         try {
-            setIsLoading(true);
             const data = await collaboratorsApi.getCollaborators(projectId);
             setCollaborators(data.collaborators);
-        } catch (error) {
-            console.error('Failed to load collaborators:', error);
+        } catch (err) {
+            setError('Failed to load collaborators');
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleInvite = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email.trim()) return;
 
-    const validateEmail = (email: string): boolean => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    };
+        setIsInviting(true);
+        setError(null);
+        setSuccess(null);
 
-    const checkIfUserExists = async (email: string): Promise<boolean> => {
         try {
-            setIsValidatingEmail(true);
-            setEmailError('');
-
-            // Check if user is already a collaborator
-            if (collaborators.some(c => c.user.email === email)) {
-                setEmailError('This user is already a collaborator');
-                return false;
-            }
-
-            // Check if user exists in the system
-            const data = await collaboratorsApi.searchUsers(email);
-            const userExists = data.users.some(user => user.email === email);
-
-            if (!userExists) {
-                setEmailError('No user found with this email address');
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            setEmailError('Failed to validate email');
-            return false;
+            await collaboratorsApi.addCollaborator(projectId, { email: email.trim(), role });
+            setSuccess(`Invited ${email} as ${role}`);
+            setEmail('');
+            loadCollaborators();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to invite collaborator');
         } finally {
-            setIsValidatingEmail(false);
+            setIsInviting(false);
         }
     };
 
-    const handleAddCollaborator = async () => {
-        if (!emailInput.trim()) {
-            setEmailError('Please enter an email address');
-            return;
-        }
-
-        if (!validateEmail(emailInput)) {
-            setEmailError('Please enter a valid email address');
-            return;
-        }
-
-        const userExists = await checkIfUserExists(emailInput);
-        if (!userExists) return;
-
+    const handleRoleChange = async (collaboratorId: string, newRole: 'editor' | 'viewer') => {
         try {
-            setIsAdding(true);
-            const request: AddCollaboratorRequest = {
-                email: emailInput,
-                role: newRole,
-            };
-
-            await collaboratorsApi.addCollaborator(projectId, request);
-
-            // Reset form
-            setEmailInput('');
-            setEmailError('');
-            setNewRole('editor');
-
-            // Reload collaborators
-            await loadCollaborators();
-
-            // Show success feedback
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 2000);
-        } catch (error) {
-            setEmailError(error instanceof Error ? error.message : 'Failed to add collaborator');
-        } finally {
-            setIsAdding(false);
+            await collaboratorsApi.updateCollaborator(projectId, collaboratorId, { role: newRole });
+            loadCollaborators();
+        } catch (err) {
+            setError('Failed to update role');
         }
     };
 
-    const handleUpdateRole = async (collaboratorId: string, role: 'editor' | 'viewer') => {
-        try {
-            await collaboratorsApi.updateCollaborator(projectId, collaboratorId, { role });
-            await loadCollaborators();
-        } catch (error) {
-            console.error('Failed to update role:', error);
-            alert(error instanceof Error ? error.message : 'Failed to update role');
-        }
-    };
-
-    const handleRemoveCollaborator = async (collaboratorId: string) => {
-        if (!confirm('Are you sure you want to remove this collaborator?')) return;
-
+    const handleRemove = async (collaboratorId: string) => {
         try {
             await collaboratorsApi.removeCollaborator(projectId, collaboratorId);
-            await loadCollaborators();
-        } catch (error) {
-            console.error('Failed to remove collaborator:', error);
-            alert(error instanceof Error ? error.message : 'Failed to remove collaborator');
+            loadCollaborators();
+        } catch (err) {
+            setError('Failed to remove collaborator');
         }
     };
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'owner':
-                return <Shield size={14} className="text-amber-600" />;
-            case 'editor':
-                return <Mail size={14} className="text-blue-600" />;
-            case 'viewer':
-                return <ShieldOff size={14} className="text-gray-600" />;
-            default:
-                return null;
+            case 'owner': return <Crown size={14} />;
+            case 'editor': return <Pencil size={14} />;
+            case 'viewer': return <Eye size={14} />;
+            default: return null;
         }
     };
 
-    const getRoleLabel = (role: string) => {
+    const getRoleColor = (role: string) => {
         switch (role) {
-            case 'owner': return 'Owner';
-            case 'editor': return 'Editor';
-            case 'viewer': return 'Viewer';
-            default: return role;
+            case 'owner': return { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' };
+            case 'editor': return { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' };
+            case 'viewer': return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+            default: return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
         }
     };
 
@@ -167,185 +97,375 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(30, 33, 22, 0.4)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 50,
+                    padding: '1rem',
+                }}
+            >
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                />
-
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        width: '100%',
+                        maxWidth: '28rem',
+                        background: 'rgba(255, 255, 255, 0.95)',
+                        backdropFilter: 'blur(20px)',
+                        borderRadius: '1.25rem',
+                        border: '1px solid rgba(220, 227, 206, 0.6)',
+                        boxShadow: '0 25px 50px -12px rgba(82, 92, 58, 0.25)',
+                        overflow: 'hidden',
+                    }}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-white z-10">
+                    <div style={{
+                        padding: '1.25rem 1.5rem',
+                        borderBottom: '1px solid #eef1e6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900">Share Project</h2>
-                            <p className="text-sm text-gray-500 mt-0.5">Manage access and permissions</p>
+                            <h2 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                color: '#3a3f2c',
+                                margin: 0,
+                            }}>
+                                Share Project
+                            </h2>
+                            <p style={{
+                                fontSize: '0.8125rem',
+                                color: '#849362',
+                                margin: '0.25rem 0 0 0',
+                            }}>
+                                Invite people to collaborate
+                            </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => {
-                                    const url = `${window.location.origin}/editor/${projectId}`;
-                                    navigator.clipboard.writeText(url);
-                                    setShowSuccess(true);
-                                    setTimeout(() => setShowSuccess(false), 2000);
-                                }}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-olive-700 bg-olive-50 hover:bg-olive-100/80 rounded-lg transition-colors border border-olive-200/50"
-                            >
-                                {showSuccess ? <Check size={16} /> : <LinkIcon size={16} />}
-                                <span>{showSuccess ? 'Copied' : 'Copy Link'}</span>
-                            </button>
-                            <button
-                                onClick={onClose}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
+                        <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={onClose}
+                            style={{
+                                width: '2rem',
+                                height: '2rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: 'none',
+                                background: '#f8f9f4',
+                                borderRadius: '0.5rem',
+                                color: '#849362',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <X size={16} />
+                        </motion.button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto">
-                        {/* Invite Section (Distinct Background) */}
-                        {isOwner && (
-                            <div className="bg-gray-50/80 px-6 py-6 border-b border-gray-100 flex flex-col gap-4">
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                    Invite by Email
-                                </label>
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex gap-2">
-                                        <div className="flex-1 relative">
-                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                            <input
-                                                type="email"
-                                                placeholder="colleague@example.com"
-                                                value={emailInput}
-                                                onChange={(e) => {
-                                                    setEmailInput(e.target.value);
-                                                    setEmailError('');
-                                                }}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleAddCollaborator()}
-                                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-olive-500/20 focus:border-olive-500 transition-all text-sm"
-                                            />
-                                        </div>
-                                        <div className="relative w-32">
-                                            <select
-                                                value={newRole}
-                                                onChange={(e) => setNewRole(e.target.value as 'editor' | 'viewer')}
-                                                className="w-full pl-3 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-olive-500/20 cursor-pointer appearance-none"
-                                            >
-                                                <option value="editor">Can edit</option>
-                                                <option value="viewer">Can view</option>
-                                            </select>
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m1 1 4 4 4-4" /></svg>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={handleAddCollaborator}
-                                            disabled={!emailInput.trim() || isAdding || isValidatingEmail}
-                                            className="px-5 py-2.5 bg-olive-600 hover:bg-olive-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm active:scale-95 flex items-center gap-2 whitespace-nowrap"
+                    {/* Invite Form */}
+                    <form onSubmit={handleInvite} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #eef1e6' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ flex: 1, position: 'relative' }}>
+                                <Mail size={16} style={{
+                                    position: 'absolute',
+                                    left: '0.875rem',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: '#a3b082',
+                                }} />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter email address"
+                                    style={{
+                                        width: '100%',
+                                        height: '2.5rem',
+                                        paddingLeft: '2.5rem',
+                                        paddingRight: '0.875rem',
+                                        border: '1px solid #dce3ce',
+                                        borderRadius: '0.625rem',
+                                        fontSize: '0.875rem',
+                                        color: '#3a3f2c',
+                                        background: '#fff',
+                                        outline: 'none',
+                                        transition: 'border-color 0.2s, box-shadow 0.2s',
+                                    }}
+                                    onFocus={(e) => {
+                                        e.target.style.borderColor = '#a3b082';
+                                        e.target.style.boxShadow = '0 0 0 3px rgba(163, 176, 130, 0.15)';
+                                    }}
+                                    onBlur={(e) => {
+                                        e.target.style.borderColor = '#dce3ce';
+                                        e.target.style.boxShadow = 'none';
+                                    }}
+                                />
+                            </div>
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value as 'editor' | 'viewer')}
+                                style={{
+                                    height: '2.5rem',
+                                    padding: '0 0.75rem',
+                                    border: '1px solid #dce3ce',
+                                    borderRadius: '0.625rem',
+                                    fontSize: '0.8125rem',
+                                    color: '#525c3a',
+                                    background: '#fff',
+                                    cursor: 'pointer',
+                                    outline: 'none',
+                                }}
+                            >
+                                <option value="editor">Editor</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="submit"
+                                disabled={isInviting || !email.trim()}
+                                style={{
+                                    height: '2.5rem',
+                                    padding: '0 1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.375rem',
+                                    border: 'none',
+                                    borderRadius: '0.625rem',
+                                    background: '#525c3a',
+                                    color: '#fff',
+                                    fontSize: '0.8125rem',
+                                    fontWeight: 500,
+                                    cursor: isInviting || !email.trim() ? 'not-allowed' : 'pointer',
+                                    opacity: isInviting || !email.trim() ? 0.5 : 1,
+                                }}
+                            >
+                                {isInviting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                                Invite
+                            </motion.button>
+                        </div>
+
+                        {/* Messages */}
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    style={{
+                                        marginTop: '0.75rem',
+                                        padding: '0.625rem 0.875rem',
+                                        background: '#fef2f2',
+                                        border: '1px solid #fecaca',
+                                        borderRadius: '0.5rem',
+                                        color: '#dc2626',
+                                        fontSize: '0.8125rem',
+                                    }}
+                                >
+                                    {error}
+                                </motion.div>
+                            )}
+                            {success && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    style={{
+                                        marginTop: '0.75rem',
+                                        padding: '0.625rem 0.875rem',
+                                        background: '#f0fdf4',
+                                        border: '1px solid #bbf7d0',
+                                        borderRadius: '0.5rem',
+                                        color: '#16a34a',
+                                        fontSize: '0.8125rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                    }}
+                                >
+                                    <Check size={14} />
+                                    {success}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </form>
+
+                    {/* Collaborators List */}
+                    <div style={{ maxHeight: '18rem', overflowY: 'auto' }}>
+                        {isLoading ? (
+                            <div style={{
+                                padding: '3rem',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.75rem',
+                                color: '#849362',
+                            }}>
+                                <Loader2 size={24} className="animate-spin" />
+                                <span style={{ fontSize: '0.875rem' }}>Loading...</span>
+                            </div>
+                        ) : collaborators.length === 0 ? (
+                            <div style={{
+                                padding: '3rem',
+                                textAlign: 'center',
+                                color: '#849362',
+                            }}>
+                                <UserPlus size={32} style={{ marginBottom: '0.75rem', opacity: 0.5 }} />
+                                <p style={{ margin: 0, fontSize: '0.875rem' }}>No collaborators yet</p>
+                                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', opacity: 0.7 }}>
+                                    Invite someone to get started
+                                </p>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '0.5rem 0' }}>
+                                {collaborators.map((collab, index) => {
+                                    const colors = getRoleColor(collab.role);
+                                    return (
+                                        <motion.div
+                                            key={collab.id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            style={{
+                                                padding: '0.875rem 1.5rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.875rem',
+                                                transition: 'background 0.15s',
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8f9f4'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                         >
-                                            {isAdding || isValidatingEmail ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-                                            <span>Invite</span>
-                                        </button>
-                                    </div>
-                                    <AnimatePresence>
-                                        {emailError && (
-                                            <motion.p
-                                                initial={{ opacity: 0, height: 0 }}
-                                                animate={{ opacity: 1, height: 'auto' }}
-                                                exit={{ opacity: 0, height: 0 }}
-                                                className="text-red-500 text-sm pl-1"
-                                            >
-                                                {emailError}
-                                            </motion.p>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                                            {/* Avatar */}
+                                            <div style={{
+                                                width: '2.25rem',
+                                                height: '2.25rem',
+                                                borderRadius: '0.625rem',
+                                                background: 'linear-gradient(135deg, #a3b082 0%, #849362 100%)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: '#fff',
+                                                fontWeight: 600,
+                                                fontSize: '0.875rem',
+                                                flexShrink: 0,
+                                            }}>
+                                                {collab.user.name?.charAt(0).toUpperCase() || collab.user.email?.charAt(0).toUpperCase()}
+                                            </div>
+
+                                            {/* Info */}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: 500,
+                                                    color: '#3a3f2c',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    {collab.user.name || 'Unknown'}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.75rem',
+                                                    color: '#849362',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    {collab.user.email}
+                                                </div>
+                                            </div>
+
+                                            {/* Role Badge */}
+                                            {collab.role === 'owner' ? (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.375rem',
+                                                    padding: '0.25rem 0.625rem',
+                                                    background: colors.bg,
+                                                    border: `1px solid ${colors.border}`,
+                                                    borderRadius: '0.375rem',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 500,
+                                                    color: colors.text,
+                                                }}>
+                                                    {getRoleIcon(collab.role)}
+                                                    Owner
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                                    <select
+                                                        value={collab.role}
+                                                        onChange={(e) => handleRoleChange(collab.id, e.target.value as 'editor' | 'viewer')}
+                                                        style={{
+                                                            padding: '0.25rem 0.5rem',
+                                                            background: colors.bg,
+                                                            border: `1px solid ${colors.border}`,
+                                                            borderRadius: '0.375rem',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 500,
+                                                            color: colors.text,
+                                                            cursor: 'pointer',
+                                                            outline: 'none',
+                                                        }}
+                                                    >
+                                                        <option value="editor">Editor</option>
+                                                        <option value="viewer">Viewer</option>
+                                                    </select>
+                                                    <motion.button
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        onClick={() => handleRemove(collab.id)}
+                                                        style={{
+                                                            width: '1.75rem',
+                                                            height: '1.75rem',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            border: 'none',
+                                                            background: 'transparent',
+                                                            color: '#a3b082',
+                                                            cursor: 'pointer',
+                                                            borderRadius: '0.375rem',
+                                                            transition: 'color 0.15s, background 0.15s',
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.color = '#dc2626';
+                                                            e.currentTarget.style.background = '#fef2f2';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.color = '#a3b082';
+                                                            e.currentTarget.style.background = 'transparent';
+                                                        }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </motion.button>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
                         )}
-
-                        {/* Members List */}
-                        <div className="px-6 py-6 flex flex-col gap-4">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                    Members
-                                </h3>
-                                <div className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold">
-                                    {collaborators.length}
-                                </div>
-                            </div>
-
-                            {isLoading ? (
-                                <div className="py-12 flex justify-center">
-                                    <Loader2 className="animate-spin text-olive-500" size={24} />
-                                </div>
-                            ) : collaborators.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <p className="text-gray-500 text-sm">No members yet.</p>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-3">
-                                    {collaborators.map((collaborator) => (
-                                        <motion.div
-                                            layout
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            key={collaborator.id}
-                                            className="group flex items-center justify-between p-3.5 rounded-xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-olive-200/50 transition-all"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-olive-100 to-olive-200 flex items-center justify-center text-olive-700 font-bold text-sm border border-olive-200/50">
-                                                    {collaborator.user.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-semibold text-gray-900">
-                                                        {collaborator.user.name}
-                                                        {currentUser?.id === collaborator.user.id && <span className="ml-2 text-xs text-gray-400 font-normal">(You)</span>}
-                                                    </span>
-                                                    <span className="text-xs text-gray-500">{collaborator.user.email}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-3">
-                                                {isOwner && collaborator.role !== 'owner' ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <select
-                                                            value={collaborator.role}
-                                                            onChange={(e) => handleUpdateRole(collaborator.id, e.target.value as 'editor' | 'viewer')}
-                                                            className="text-xs font-medium text-gray-600 bg-transparent py-1 pl-2 pr-6 border-none focus:ring-0 cursor-pointer hover:text-gray-900"
-                                                        >
-                                                            <option value="editor">Editor</option>
-                                                            <option value="viewer">Viewer</option>
-                                                        </select>
-                                                        <button
-                                                            onClick={() => handleRemoveCollaborator(collaborator.id)}
-                                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-md border border-gray-200/50">
-                                                        {getRoleIcon(collaborator.role)}
-                                                        <span className="text-xs font-medium text-gray-600">{getRoleLabel(collaborator.role)}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </motion.div>
-            </div>
+            </motion.div>
         </AnimatePresence>
     );
 }

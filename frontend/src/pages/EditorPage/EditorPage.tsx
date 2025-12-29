@@ -75,18 +75,28 @@ export function EditorPage() {
 
                 if (response.data.files && response.data.files.length > 0) {
                     // Files come with content: null for lazy loading
-                    setFiles(response.data.files.map((f: { id: string; path: string; name: string; mimeType: string; content: string | null }) => ({
+                    const loadedFiles = response.data.files.map((f: { id: string; path: string; name: string; mimeType: string; content: string | null }) => ({
                         ...f,
                         isLoaded: false,
-                    })));
+                    }));
+                    setFiles(loadedFiles);
 
-                    // Set first file as current and load its content
-                    const firstFile = response.data.files[0];
-                    setCurrentFile({ ...firstFile, isLoaded: false });
+                    // Try to restore last opened file, otherwise use first file
+                    const lastOpenedFileId = useEditorStore.getState().getLastOpenedFileId(projectId);
+                    let fileToOpen = loadedFiles[0];
 
-                    // Load first file content
-                    if (firstFile.id) {
-                        loadFileContent(firstFile.id);
+                    if (lastOpenedFileId) {
+                        const lastFile = loadedFiles.find((f: { id: string }) => f.id === lastOpenedFileId);
+                        if (lastFile) {
+                            fileToOpen = lastFile;
+                        }
+                    }
+
+                    setCurrentFile({ ...fileToOpen, isLoaded: false });
+
+                    // Load file content
+                    if (fileToOpen.id) {
+                        loadFileContent(fileToOpen.id);
                     }
                 } else {
                     // Create default file if none exist

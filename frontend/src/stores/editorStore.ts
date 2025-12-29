@@ -32,6 +32,7 @@ interface EditorState {
     files: File[];
     folders: Folder[];
     activeDirectory: string; // Currently expanded/active folder path
+    lastOpenedFileByProject: Record<string, string>; // projectId -> fileId
 
     // Editor state
     isCompiling: boolean;
@@ -65,6 +66,8 @@ interface EditorState {
     loadFileContent: (fileId: string) => Promise<void>;
     moveFile: (fileId: string, newPath: string) => Promise<void>;
     renameFile: (fileId: string, newName: string) => Promise<void>;
+    setLastOpenedFile: (projectId: string, fileId: string) => void;
+    getLastOpenedFileId: (projectId: string) => string | null;
 }
 
 // Default sample file
@@ -121,6 +124,7 @@ export const useEditorStore = create<EditorState>()(
             files: defaultFiles,
             folders: [],
             activeDirectory: '',
+            lastOpenedFileByProject: {},
             isCompiling: false,
             compilationError: null,
             pdfUrl: null,
@@ -249,6 +253,16 @@ export const useEditorStore = create<EditorState>()(
                     throw error;
                 }
             },
+            setLastOpenedFile: (projectId: string, fileId: string) =>
+                set((state) => ({
+                    lastOpenedFileByProject: {
+                        ...state.lastOpenedFileByProject,
+                        [projectId]: fileId,
+                    },
+                })),
+            getLastOpenedFileId: (projectId: string) => {
+                return get().lastOpenedFileByProject[projectId] || null;
+            },
         }),
         {
             name: 'latex-editor-storage',
@@ -256,6 +270,7 @@ export const useEditorStore = create<EditorState>()(
                 files: state.files,
                 currentFile: state.currentFile,
                 pdfBase64: state.pdfBase64,
+                lastOpenedFileByProject: state.lastOpenedFileByProject,
             }),
         }
     )

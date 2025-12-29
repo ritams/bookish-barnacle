@@ -138,15 +138,9 @@ export function LandingPage() {
                 <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
                     <Logo size="md" linkTo="/" animate={true} />
                     <nav className="flex items-center gap-3">
-                        <Link
-                            to="/login"
-                            className="px-5 py-2.5 text-olive-700 hover:text-olive-900 font-medium transition-colors hidden sm:block"
-                        >
-                            Log In
-                        </Link>
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                             <Link
-                                to="/signup"
+                                to="/login"
                                 className="px-6 py-2.5 bg-olive-700 hover:bg-olive-800 text-white rounded-xl font-semibold transition-all shadow-lg shadow-olive-300/30 hover:shadow-olive-400/40"
                             >
                                 Get Started
@@ -212,19 +206,11 @@ export function LandingPage() {
                             >
                                 <motion.div whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }}>
                                     <Link
-                                        to="/signup"
+                                        to="/login"
                                         className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-olive-700 hover:bg-olive-800 text-white rounded-2xl text-lg font-semibold transition-all shadow-xl shadow-olive-400/25 hover:shadow-olive-500/30 group"
                                     >
                                         Start Writing Free
                                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                    </Link>
-                                </motion.div>
-                                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                    <Link
-                                        to="/login"
-                                        className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-white/80 backdrop-blur border-2 border-olive-200 hover:border-olive-400 text-olive-700 rounded-2xl text-lg font-semibold transition-all hover:bg-olive-50"
-                                    >
-                                        Sign In
                                     </Link>
                                 </motion.div>
                             </motion.div>
@@ -427,10 +413,10 @@ export function LandingPage() {
                             whileTap={{ scale: 0.98 }}
                         >
                             <Link
-                                to="/signup"
+                                to="/login"
                                 className="inline-flex items-center gap-3 px-10 py-5 bg-white hover:bg-olive-50 text-olive-800 rounded-2xl text-lg font-bold transition-all shadow-2xl hover:shadow-3xl group"
                             >
-                                Create Free Account
+                                Get Started
                                 <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </motion.div>

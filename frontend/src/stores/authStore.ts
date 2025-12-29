@@ -15,8 +15,7 @@ interface AuthState {
     isLoading: boolean;
     error: string | null;
 
-    login: (email: string, password: string) => Promise<boolean>;
-    register: (email: string, password: string, name: string) => Promise<boolean>;
+    googleLogin: (credential: string) => Promise<boolean>;
     logout: () => void;
     clearError: () => void;
 }
@@ -29,43 +28,19 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
 
-            login: async (email, password) => {
+            googleLogin: async (credential) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    const response = await fetch(`${API_BASE_URL}/auth/google`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password }),
+                        body: JSON.stringify({ credential }),
                     });
 
                     const data = await response.json();
 
                     if (!response.ok) {
                         set({ error: data.error || 'Login failed', isLoading: false });
-                        return false;
-                    }
-
-                    set({ user: data.user, token: data.token, isLoading: false });
-                    return true;
-                } catch {
-                    set({ error: 'Network error. Please try again.', isLoading: false });
-                    return false;
-                }
-            },
-
-            register: async (email, password, name) => {
-                set({ isLoading: true, error: null });
-                try {
-                    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password, name }),
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        set({ error: data.error || 'Registration failed', isLoading: false });
                         return false;
                     }
 

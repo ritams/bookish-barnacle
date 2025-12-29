@@ -1,83 +1,65 @@
 import { Router, Request, Response } from 'express';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
+import { OAuth2Client } from 'google-auth-library';
 
 const router = Router();
 const prisma = new PrismaClient();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Validation schemas
-const registerSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(8),
-    name: z.string().min(2)
+const googleAuthSchema = z.object({
+    credential: z.string()
 });
 
-const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string()
-});
-
-// POST /auth/register
-router.post('/register', async (req: Request, res: Response): Promise<void> => {
+router.post('/google', async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, password, name } = registerSchema.parse(req.body);
+        const { credential } = googleAuthSchema.parse(req.body);
 
-        // Check if user exists
-        const existingUser = await prisma.user.findUnique({ where: { email } });
-        if (existingUser) {
-            res.status(400).json({ error: 'Email already registered' });
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+
+        if (!payload || !payload.email) {
+            res.status(400).json({ error: 'Invalid Google token' });
             return;
         }
 
-        // Hash password
-        const passwordHash = await bcrypt.hash(password, 12);
+        const { email, sub: googleId, name } = payload;
 
-        // Create user
-        const user = await prisma.user.create({
-            data: { email, passwordHash, name },
-            select: { id: true, email: true, name: true, createdAt: true }
+        // Find or create user
+        let user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { googleId },
+                    { email }
+                ]
+            }
         });
 
-        // Generate token
-        const token = jwt.sign(
-            { userId: user.id, email: user.email, name: user.name },
-            process.env.JWT_SECRET || 'secret',
-            { expiresIn: '7d' }
-        );
-
-        res.status(201).json({ user, token });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ error: 'Validation failed', details: error.errors });
-            return;
-        }
-        console.error('Register error:', error);
-        res.status(500).json({ error: 'Registration failed' });
-    }
-});
-
-// POST /auth/login
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email, password } = loginSchema.parse(req.body);
-
-        // Find user
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-            res.status(401).json({ error: 'Invalid credentials' });
-            return;
+        if (user) {
+            // Link googleId if not linked
+            if (!user.googleId) {
+                user = await prisma.user.update({
+                    where: { id: user.id },
+                    data: { googleId }
+                });
+            }
+        } else {
+            // Create new user
+            user = await prisma.user.create({
+                data: {
+                    email,
+                    name: name || email.split('@')[0],
+                    googleId,
+                    // valid without passwordHash since it's optional now
+                }
+            });
         }
 
-        // Verify password
-        const validPassword = await bcrypt.compare(password, user.passwordHash);
-        if (!validPassword) {
-            res.status(401).json({ error: 'Invalid credentials' });
-            return;
-        }
-
-        // Generate token
+        // Generate session token
         const token = jwt.sign(
             { userId: user.id, email: user.email, name: user.name },
             process.env.JWT_SECRET || 'secret',
@@ -88,13 +70,10 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
             user: { id: user.id, email: user.email, name: user.name },
             token
         });
+
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ error: 'Validation failed', details: error.errors });
-            return;
-        }
-        console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
+        console.error('Google auth error:', error);
+        res.status(401).json({ error: 'Authentication failed' });
     }
 });
 
