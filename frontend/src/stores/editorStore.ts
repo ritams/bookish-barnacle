@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '../services/api';
 
 interface File {
     id: string;
@@ -29,6 +30,10 @@ interface EditorState {
     pdfUrl: string | null;
     pdfBase64: string | null; // Store PDF as base64 for persistence
 
+    // Save state
+    isSaving: boolean;
+    lastSaveError: string | null;
+
     // Actions
     setCurrentProject: (project: Project | null) => void;
     setCurrentFile: (file: File | null) => void;
@@ -40,6 +45,7 @@ interface EditorState {
     setPdfBase64: (base64: string | null) => void;
     addFile: (file: File) => void;
     removeFile: (fileId: string) => void;
+    saveCurrentFile: () => Promise<boolean>;
 }
 
 // Default sample file
@@ -88,7 +94,7 @@ Start editing to see your changes!
 
 export const useEditorStore = create<EditorState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             // Initial state
             currentProject: null,
             currentFile: null,
@@ -97,6 +103,8 @@ export const useEditorStore = create<EditorState>()(
             compilationError: null,
             pdfUrl: null,
             pdfBase64: null,
+            isSaving: false,
+            lastSaveError: null,
 
             // Actions
             setCurrentProject: (project) => set({ currentProject: project }),
@@ -124,6 +132,27 @@ export const useEditorStore = create<EditorState>()(
                     currentFile:
                         state.currentFile?.id === fileId ? null : state.currentFile,
                 })),
+            saveCurrentFile: async () => {
+                const { currentFile, isSaving } = get();
+                if (!currentFile || isSaving) return false;
+
+                // Skip saving for default/temporary files (they don't exist in DB)
+                if (currentFile.id === 'main-tex') return true;
+
+                set({ isSaving: true, lastSaveError: null });
+
+                try {
+                    await api.files.update(currentFile.id, {
+                        content: currentFile.content,
+                    });
+                    set({ isSaving: false });
+                    return true;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to save';
+                    set({ isSaving: false, lastSaveError: errorMessage });
+                    return false;
+                }
+            },
         }),
         {
             name: 'latex-editor-storage',

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { Play, Loader2, ArrowLeft, Download, CheckCircle2 } from 'lucide-react';
+import { Play, Loader2, ArrowLeft, Download, CheckCircle2, Share } from 'lucide-react';
 import { Editor } from '../../components/Editor';
 import { FileManager } from '../../components/FileManager';
 import { PDFViewer } from '../../components/PDFViewer';
+import { CollaboratorManager } from '../../components/CollaboratorManager/CollaboratorManager';
 import { useEditorStore } from '../../stores/editorStore';
 import { compileLatex } from '../../services/latex';
 import { api } from '../../services/api';
@@ -39,6 +40,7 @@ export function EditorPage() {
     const [project, setProject] = useState<ProjectData | null>(null);
     const [isLoadingProject, setIsLoadingProject] = useState(true);
     const [showCompileSuccess, setShowCompileSuccess] = useState(false);
+    const [showCollaboratorManager, setShowCollaboratorManager] = useState(false);
 
     const {
         files,
@@ -233,6 +235,30 @@ Start writing your document here!
                             />
                         </motion.button>
                     )}
+
+                    {/* Share Button */}
+                    <motion.button
+                        className="flex items-center h-10 bg-olive-100 text-olive-700 border border-olive-200 rounded-xl hover:bg-olive-200 hover:border-olive-300 transition-colors text-sm font-medium overflow-hidden"
+                        style={{ paddingLeft: '0.75rem', paddingRight: '0.75rem' }}
+                        initial="initial"
+                        whileHover="hover"
+                        animate="initial"
+                        onClick={() => setShowCollaboratorManager(true)}
+                        title="Manage Collaborators"
+                    >
+                        <Share size={18} className="flex-shrink-0" />
+                        <motion.span
+                            variants={{
+                                initial: { width: 'auto', opacity: 1, marginLeft: '0.625rem' },
+                                hover: { width: 'auto', opacity: 1, marginLeft: '0.625rem' }
+                            }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}
+                        >
+                            Share
+                        </motion.span>
+                    </motion.button>
+
                     <motion.button
                         className="flex items-center h-10 bg-olive-700 hover:bg-olive-800 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg overflow-hidden disabled:opacity-50"
                         style={{ paddingLeft: '0.875rem', paddingRight: '0.875rem' }}
@@ -284,7 +310,10 @@ Start writing your document here!
                     </PanelResizeHandle>
 
                     <Panel defaultSize={45} minSize={30}>
-                        <Editor />
+                        <Editor
+                            projectId={projectId}
+                            fileId={currentFile?.id}
+                        />
                     </Panel>
 
                     <PanelResizeHandle className="w-1.5 bg-olive-200 hover:bg-olive-400 active:bg-olive-500 transition-colors cursor-col-resize group">
@@ -298,6 +327,15 @@ Start writing your document here!
                     </Panel>
                 </PanelGroup>
             </main>
+
+            {/* Collaborator Manager Modal */}
+            {projectId && (
+                <CollaboratorManager
+                    projectId={projectId}
+                    isOpen={showCollaboratorManager}
+                    onClose={() => setShowCollaboratorManager(false)}
+                />
+            )}
         </div>
     );
 }

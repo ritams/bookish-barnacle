@@ -1,4 +1,6 @@
 /* CodeMirror specific overrides */
+@import './CollaboratorCursors.css';
+
 .editor-content .cm-editor {
   height: 100%;
 }

@@ -23,6 +23,10 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "lib0": "^0.2.116",
+    "socket.io": "^4.8.3",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.28",
     "zod": "^3.25.76"
   },
   "devDependencies": {

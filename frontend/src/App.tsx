@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { LandingPage } from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 import { ProjectsPage } from './pages/ProjectsPage';
@@ -8,7 +9,9 @@ import './index.css';
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  console.log('[App] ProtectedRoute - Token:', token ? 'exists' : 'missing');
+  console.log('[App] ProtectedRoute - User:', user);
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -27,6 +30,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" richColors />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={

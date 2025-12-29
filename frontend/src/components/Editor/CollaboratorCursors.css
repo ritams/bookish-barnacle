@@ -1,0 +1,112 @@
+/* Collaborator Cursor Styles */
+
+/* Remote cursor line */
+.cm-ySelectionCaret {
+    position: relative;
+    border-left: 2px solid;
+    border-right: none;
+    margin-left: -1px;
+    margin-right: -1px;
+    box-sizing: border-box;
+    display: inline-block;
+    height: 1.4em;
+    vertical-align: middle;
+    z-index: 10;
+    background-color: currentColor;
+}
+
+/* Remote cursor name label */
+.cm-ySelectionInfo {
+    position: absolute;
+    top: -1.2em;
+    left: -1px;
+    font-size: 10px;
+    font-family: Inter, system-ui, sans-serif;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 20;
+    pointer-events: none;
+    line-height: 1;
+    font-weight: 600;
+    user-select: none;
+    opacity: 1 !important;
+    visibility: visible !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    background-color: inherit;
+    display: block !important;
+}
+
+/* Remote selection highlight */
+.cm-ySelection {
+    background-color: rgba(77, 84, 57, 0.15);
+}
+
+/* Collaborators list in editor header */
+.collaborators-list {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    margin-right: 0.5rem;
+}
+
+.collaborator-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    transition: width 0.3s ease, border-radius 0.3s ease, padding 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.collaborator-avatar:not(:first-child) {
+    margin-left: -8px;
+}
+
+.collaborator-avatar:hover {
+    z-index: 10;
+    width: auto;
+    min-width: 100px;
+    max-width: 150px;
+    border-radius: 12px;
+    padding: 0 12px;
+    transform: scale(1.02);
+}
+
+.collaborator-initial {
+    display: block;
+    transition: opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.collaborator-full-name {
+    position: absolute;
+    opacity: 0;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    margin-left: 4px;
+}
+
+.collaborator-avatar:hover .collaborator-initial {
+    opacity: 0;
+}
+
+.collaborator-avatar:hover .collaborator-full-name {
+    opacity: 1;
+    position: static;
+}

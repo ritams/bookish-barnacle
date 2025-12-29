@@ -47,6 +47,7 @@ model File {
   content   String   @default("")
   mimeType  String   @default("text/x-tex") @map("mime_type")
   size      BigInt   @default(0)
+  yjsState  Bytes?   @map("yjs_state")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

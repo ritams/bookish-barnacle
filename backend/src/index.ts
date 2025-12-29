@@ -1,17 +1,35 @@
 import 'dotenv/config';
 import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import projectRoutes from './routes/projects.js';
 import fileRoutes from './routes/files.js';
 import compileRoutes from './routes/compile.js';
+import collaboratorRoutes from './routes/collaborators.js';
+import { setupCollaborationHandlers } from './routes/collaboration.js';
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// Socket.io setup with CORS
+const io = new Server(httpServer, {
+    cors: {
+        origin: FRONTEND_URL,
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
+});
+
+// Setup collaboration WebSocket handlers
+setupCollaborationHandlers(io);
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: FRONTEND_URL,
     credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -26,6 +44,7 @@ app.use('/auth', authRoutes);
 app.use('/projects', projectRoutes);
 app.use('/files', fileRoutes);
 app.use('/compile', compileRoutes);
+app.use('/', collaboratorRoutes);
 
 // Error handling
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -33,8 +52,11 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
     res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🔌 WebSocket ready for connections`);
 });
 
 export default app;
+export { io };
+

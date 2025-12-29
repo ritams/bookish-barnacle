@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, FileText, Trash2, LogOut, FolderOpen, Search, X, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, FileText, Trash2, LogOut, FolderOpen, Search, X, Sparkles, Loader2, Share2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { api } from '../../services/api';
 import { Logo } from '../../components/Logo';
+import { CollaboratorManager } from '../../components/CollaboratorManager/CollaboratorManager';
 
 interface Project {
     id: string;
@@ -41,6 +42,7 @@ export function ProjectsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [sharingProject, setSharingProject] = useState<string | null>(null);
 
     useEffect(() => {
         loadProjects();
@@ -566,11 +568,43 @@ export function ProjectsPage() {
                                 >
                                     <Trash2 size={18} />
                                 </motion.button>
+                                <motion.button
+                                    style={{
+                                        position: 'absolute',
+                                        top: '1rem',
+                                        right: '3.5rem',
+                                        padding: '0.625rem',
+                                        borderRadius: '0.75rem',
+                                        color: '#c2ccab',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setSharingProject(project.id);
+                                    }}
+                                    whileHover={{ scale: 1.1, background: '#f0fdf4', color: '#16a34a' }}
+                                    whileTap={{ scale: 0.9 }}
+                                    title="Share project"
+                                >
+                                    <Share2 size={18} />
+                                </motion.button>
                             </motion.div>
                         ))}
                     </motion.div>
                 )}
             </main>
+
+            {/* Collaborator Manager Modal */}
+            {sharingProject && (
+                <CollaboratorManager
+                    projectId={sharingProject}
+                    isOpen={!!sharingProject}
+                    onClose={() => setSharingProject(null)}
+                />
+            )}
         </div>
     );
 }
