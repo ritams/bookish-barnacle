@@ -143,8 +143,10 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
                 // Step 5c: Run pdflatex (second pass)
                 compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
 
-                // Step 5d: Run pdflatex (third pass)
-                if (compileResult.success) {
+                // Step 5d: Run pdflatex (third pass) if needed
+                if (compileResult.success &&
+                    (compileResult.log.includes('Rerun to get cross-references right') ||
+                        compileResult.log.includes('Label(s) may have changed'))) {
                     compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
                 }
             } else {
@@ -153,8 +155,11 @@ export async function compileProject(request: CompileRequest): Promise<CompileRe
                 compileResult.log += `\n\nBibTeX Log:\n${bibtexResult.log}`;
             }
         } else if (compileResult.success) {
-            // No bib files, just run second pass for cross-references
-            compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
+            // No bib files, check if we need a second pass
+            if (compileResult.log.includes('Rerun to get cross-references right') ||
+                compileResult.log.includes('Label(s) may have changed')) {
+                compileResult = await runPdflatex(cacheDir, sanitizedTargetFile, workingDir);
+            }
         }
 
         if (!compileResult.success) {
