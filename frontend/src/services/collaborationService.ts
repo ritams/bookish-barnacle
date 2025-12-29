@@ -1,10 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../stores/authStore';
 
-// Socket.io needs the base URL without /api path
 const SOCKET_URL = import.meta.env.VITE_WS_URL ||
-    (import.meta.env.VITE_API_URL?.replace(/\/api$/, '')) ||
-    'http://localhost:3001';
+    (import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001');
 
 let socket: Socket | null = null;
 
