@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, UserPlus, Crown, Pencil, Eye, Trash2, Loader2, Mail, Check } from 'lucide-react';
+import { X, UserPlus, Crown, Pencil, Eye, Trash2, Loader2, Mail, Check, Share2 } from 'lucide-react';
 import { collaboratorsApi } from '../../services/collaboratorsApi';
 import type { Collaborator } from '../../services/collaboratorsApi';
 
@@ -87,9 +87,9 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
     const getRoleColor = (role: string) => {
         switch (role) {
             case 'owner': return { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' };
-            case 'editor': return { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' };
-            case 'viewer': return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
-            default: return { bg: '#f3f4f6', text: '#374151', border: '#d1d5db' };
+            case 'editor': return { bg: '#ecfeff', text: '#0891b2', border: '#67e8f9' };
+            case 'viewer': return { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
+            default: return { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1' };
         }
     };
 
@@ -105,7 +105,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                 style={{
                     position: 'fixed',
                     inset: 0,
-                    background: 'rgba(30, 33, 22, 0.4)',
+                    background: 'rgba(15, 23, 42, 0.5)',
                     backdropFilter: 'blur(8px)',
                     display: 'flex',
                     alignItems: 'center',
@@ -123,38 +123,53 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                     style={{
                         width: '100%',
                         maxWidth: '28rem',
-                        background: 'rgba(255, 255, 255, 0.95)',
+                        background: 'rgba(255, 255, 255, 0.98)',
                         backdropFilter: 'blur(20px)',
                         borderRadius: '1.25rem',
-                        border: '1px solid rgba(220, 227, 206, 0.6)',
-                        boxShadow: '0 25px 50px -12px rgba(82, 92, 58, 0.25)',
+                        border: '1px solid rgba(226, 232, 240, 0.8)',
+                        boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25)',
                         overflow: 'hidden',
                     }}
                 >
                     {/* Header */}
                     <div style={{
                         padding: '1.25rem 1.5rem',
-                        borderBottom: '1px solid #eef1e6',
+                        borderBottom: '1px solid #f1f5f9',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        background: 'linear-gradient(135deg, #f8fafc 0%, #fff 100%)',
                     }}>
-                        <div>
-                            <h2 style={{
-                                fontSize: '1.125rem',
-                                fontWeight: 600,
-                                color: '#3a3f2c',
-                                margin: 0,
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{
+                                width: '2.25rem',
+                                height: '2.25rem',
+                                background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                                borderRadius: '0.625rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
                             }}>
-                                Share Project
-                            </h2>
-                            <p style={{
-                                fontSize: '0.8125rem',
-                                color: '#849362',
-                                margin: '0.25rem 0 0 0',
-                            }}>
-                                Invite people to collaborate
-                            </p>
+                                <Share2 size={16} />
+                            </div>
+                            <div>
+                                <h2 style={{
+                                    fontSize: '1.125rem',
+                                    fontWeight: 600,
+                                    color: '#1e293b',
+                                    margin: 0,
+                                }}>
+                                    Share Project
+                                </h2>
+                                <p style={{
+                                    fontSize: '0.8125rem',
+                                    color: '#64748b',
+                                    margin: '0.125rem 0 0 0',
+                                }}>
+                                    Invite people to collaborate
+                                </p>
+                            </div>
                         </div>
                         <motion.button
                             whileHover={{ scale: 1.1 }}
@@ -167,10 +182,11 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 border: 'none',
-                                background: '#f8f9f4',
+                                background: '#f1f5f9',
                                 borderRadius: '0.5rem',
-                                color: '#849362',
+                                color: '#64748b',
                                 cursor: 'pointer',
+                                transition: 'all 0.15s',
                             }}
                         >
                             <X size={16} />
@@ -178,7 +194,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                     </div>
 
                     {/* Invite Form */}
-                    <form onSubmit={handleInvite} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #eef1e6' }}>
+                    <form onSubmit={handleInvite} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #f1f5f9' }}>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <div style={{ flex: 1, position: 'relative' }}>
                                 <Mail size={16} style={{
@@ -186,7 +202,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                     left: '0.875rem',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
-                                    color: '#a3b082',
+                                    color: '#94a3b8',
                                 }} />
                                 <input
                                     type="email"
@@ -198,20 +214,20 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                         height: '2.5rem',
                                         paddingLeft: '2.5rem',
                                         paddingRight: '0.875rem',
-                                        border: '1px solid #dce3ce',
+                                        border: '1px solid #e2e8f0',
                                         borderRadius: '0.625rem',
                                         fontSize: '0.875rem',
-                                        color: '#3a3f2c',
+                                        color: '#1e293b',
                                         background: '#fff',
                                         outline: 'none',
                                         transition: 'border-color 0.2s, box-shadow 0.2s',
                                     }}
                                     onFocus={(e) => {
-                                        e.target.style.borderColor = '#a3b082';
-                                        e.target.style.boxShadow = '0 0 0 3px rgba(163, 176, 130, 0.15)';
+                                        e.target.style.borderColor = '#06b6d4';
+                                        e.target.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.15)';
                                     }}
                                     onBlur={(e) => {
-                                        e.target.style.borderColor = '#dce3ce';
+                                        e.target.style.borderColor = '#e2e8f0';
                                         e.target.style.boxShadow = 'none';
                                     }}
                                 />
@@ -222,10 +238,10 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                 style={{
                                     height: '2.5rem',
                                     padding: '0 0.75rem',
-                                    border: '1px solid #dce3ce',
+                                    border: '1px solid #e2e8f0',
                                     borderRadius: '0.625rem',
                                     fontSize: '0.8125rem',
-                                    color: '#525c3a',
+                                    color: '#334155',
                                     background: '#fff',
                                     cursor: 'pointer',
                                     outline: 'none',
@@ -247,12 +263,13 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                     gap: '0.375rem',
                                     border: 'none',
                                     borderRadius: '0.625rem',
-                                    background: '#525c3a',
+                                    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
                                     color: '#fff',
                                     fontSize: '0.8125rem',
                                     fontWeight: 500,
                                     cursor: isInviting || !email.trim() ? 'not-allowed' : 'pointer',
                                     opacity: isInviting || !email.trim() ? 0.5 : 1,
+                                    boxShadow: '0 4px 6px -1px rgba(30, 41, 59, 0.2)',
                                 }}
                             >
                                 {isInviting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
@@ -288,10 +305,10 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                     style={{
                                         marginTop: '0.75rem',
                                         padding: '0.625rem 0.875rem',
-                                        background: '#f0fdf4',
-                                        border: '1px solid #bbf7d0',
+                                        background: '#ecfeff',
+                                        border: '1px solid #67e8f9',
                                         borderRadius: '0.5rem',
-                                        color: '#16a34a',
+                                        color: '#0891b2',
                                         fontSize: '0.8125rem',
                                         display: 'flex',
                                         alignItems: 'center',
@@ -314,7 +331,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 gap: '0.75rem',
-                                color: '#849362',
+                                color: '#64748b',
                             }}>
                                 <Loader2 size={24} className="animate-spin" />
                                 <span style={{ fontSize: '0.875rem' }}>Loading...</span>
@@ -323,11 +340,22 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                             <div style={{
                                 padding: '3rem',
                                 textAlign: 'center',
-                                color: '#849362',
+                                color: '#64748b',
                             }}>
-                                <UserPlus size={32} style={{ marginBottom: '0.75rem', opacity: 0.5 }} />
-                                <p style={{ margin: 0, fontSize: '0.875rem' }}>No collaborators yet</p>
-                                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', opacity: 0.7 }}>
+                                <div style={{
+                                    width: '3.5rem',
+                                    height: '3.5rem',
+                                    background: '#f1f5f9',
+                                    borderRadius: '0.875rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    margin: '0 auto 0.75rem auto',
+                                }}>
+                                    <UserPlus size={24} style={{ color: '#94a3b8' }} />
+                                </div>
+                                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#475569' }}>No collaborators yet</p>
+                                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem', color: '#94a3b8' }}>
                                     Invite someone to get started
                                 </p>
                             </div>
@@ -348,7 +376,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                                 gap: '0.875rem',
                                                 transition: 'background 0.15s',
                                             }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8f9f4'}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
                                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                         >
                                             {/* Avatar */}
@@ -356,7 +384,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                                 width: '2.25rem',
                                                 height: '2.25rem',
                                                 borderRadius: '0.625rem',
-                                                background: 'linear-gradient(135deg, #a3b082 0%, #849362 100%)',
+                                                background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -373,7 +401,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                                 <div style={{
                                                     fontSize: '0.875rem',
                                                     fontWeight: 500,
-                                                    color: '#3a3f2c',
+                                                    color: '#1e293b',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
@@ -382,7 +410,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                                 </div>
                                                 <div style={{
                                                     fontSize: '0.75rem',
-                                                    color: '#849362',
+                                                    color: '#64748b',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
@@ -440,7 +468,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                                             justifyContent: 'center',
                                                             border: 'none',
                                                             background: 'transparent',
-                                                            color: '#a3b082',
+                                                            color: '#94a3b8',
                                                             cursor: 'pointer',
                                                             borderRadius: '0.375rem',
                                                             transition: 'color 0.15s, background 0.15s',
@@ -450,7 +478,7 @@ export function CollaboratorManager({ projectId, isOpen, onClose }: Collaborator
                                                             e.currentTarget.style.background = '#fef2f2';
                                                         }}
                                                         onMouseLeave={(e) => {
-                                                            e.currentTarget.style.color = '#a3b082';
+                                                            e.currentTarget.style.color = '#94a3b8';
                                                             e.currentTarget.style.background = 'transparent';
                                                         }}
                                                     >

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Snowflake, Loader2 } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuthStore } from '../../stores/authStore';
 import { Logo } from '../../components/Logo';
@@ -19,13 +19,13 @@ export function AuthPage() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #f8f9f4 0%, #fff 50%, #eef1e6 100%)' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif', background: 'linear-gradient(135deg, #f8fafc 0%, #fff 50%, #f1f5f9 100%)' }}>
             {/* Left Panel - Branding */}
             <div
                 className="hidden lg:flex"
                 style={{
                     width: '50%',
-                    background: 'linear-gradient(135deg, #525c3a 0%, #525c3a 50%, #434a31 100%)',
+                    background: 'linear-gradient(135deg, #334155 0%, #1e293b 50%, #0f172a 100%)',
                     padding: '3rem',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
@@ -42,12 +42,26 @@ export function AuthPage() {
                             left: '2.5rem',
                             width: '18rem',
                             height: '18rem',
-                            background: 'rgba(104, 117, 73, 0.3)',
+                            background: 'rgba(6, 182, 212, 0.15)',
                             borderRadius: '50%',
                             filter: 'blur(48px)'
                         }}
                         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
                         transition={{ duration: 8, repeat: Infinity }}
+                    />
+                    <motion.div
+                        style={{
+                            position: 'absolute',
+                            bottom: '5rem',
+                            right: '2.5rem',
+                            width: '14rem',
+                            height: '14rem',
+                            background: 'rgba(100, 116, 139, 0.2)',
+                            borderRadius: '50%',
+                            filter: 'blur(48px)'
+                        }}
+                        animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.4, 0.2] }}
+                        transition={{ duration: 10, repeat: Infinity }}
                     />
                 </div>
 
@@ -69,7 +83,7 @@ export function AuthPage() {
                     <h2 style={{ fontSize: '2.5rem', fontWeight: 700, color: 'white', marginBottom: '1rem', lineHeight: 1.2 }}>
                         Start your journey
                     </h2>
-                    <p style={{ color: '#c2ccab', fontSize: '1.125rem', lineHeight: 1.6, maxWidth: '28rem' }}>
+                    <p style={{ color: '#94a3b8', fontSize: '1.125rem', lineHeight: 1.6, maxWidth: '28rem' }}>
                         Sign in to continue working on your LaTeX documents and access all your projects.
                     </p>
 
@@ -83,12 +97,12 @@ export function AuthPage() {
                         {['Real-time PDF preview', 'Cloud sync across devices', 'Free forever'].map((feature, i) => (
                             <motion.div
                                 key={feature}
-                                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#c2ccab' }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#94a3b8' }}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.6 + i * 0.1 }}
                             >
-                                <Sparkles size={16} color="#a3b082" />
+                                <Snowflake size={16} color="#22d3ee" />
                                 <span>{feature}</span>
                             </motion.div>
                         ))}
@@ -96,12 +110,12 @@ export function AuthPage() {
                 </motion.div>
 
                 <motion.div
-                    style={{ position: 'relative', zIndex: 10, color: '#a3b082', fontSize: '0.875rem' }}
+                    style={{ position: 'relative', zIndex: 10, color: '#64748b', fontSize: '0.875rem' }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.8 }}
                 >
-                    © 2024 LaTeX Studio
+                    © 2024 Winter Archive
                 </motion.div>
             </div>
 
@@ -127,15 +141,15 @@ export function AuthPage() {
                             backdropFilter: 'blur(20px)',
                             padding: '2.5rem',
                             borderRadius: '1.5rem',
-                            border: '1px solid rgba(220, 227, 206, 0.5)',
-                            boxShadow: '0 25px 50px -12px rgba(82, 92, 58, 0.15)',
+                            border: '1px solid rgba(226, 232, 240, 0.5)',
+                            boxShadow: '0 25px 50px -12px rgba(51, 65, 85, 0.15)',
                             textAlign: 'center'
                         }}
                     >
-                        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#3a3f2c', marginBottom: '0.5rem' }}>
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>
                             Welcome
                         </h1>
-                        <p style={{ color: '#849362', fontSize: '0.875rem', marginBottom: '2rem' }}>
+                        <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '2rem' }}>
                             Sign in with Google to continue
                         </p>
 
@@ -150,7 +164,7 @@ export function AuthPage() {
                         </div>
 
                         {isLoading && (
-                            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#525c3a' }}>
+                            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#334155' }}>
                                 <Loader2 size={16} className="animate-spin" />
                                 <span style={{ fontSize: '0.875rem' }}>Authenticating...</span>
                             </div>

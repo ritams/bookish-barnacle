@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, FileText, Trash2, LogOut, FolderOpen, Search, X, Sparkles, Loader2, Share2 } from 'lucide-react';
+import { Plus, FileText, Trash2, LogOut, FolderOpen, Search, X, Snowflake, Loader2, Share2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { api } from '../../services/api';
 import { Logo } from '../../components/Logo';
@@ -122,7 +122,7 @@ export function ProjectsPage() {
     );
 
     return (
-        <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f8f9f4 0%, #fff 50%, #f8f9f4 100%)', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f8fafc 0%, #fff 50%, #f8fafc 100%)', fontFamily: 'Inter, sans-serif' }}>
             {/* Header */}
             <motion.header
                 style={{
@@ -131,7 +131,7 @@ export function ProjectsPage() {
                     zIndex: 50,
                     background: 'rgba(255, 255, 255, 0.8)',
                     backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(220, 227, 206, 0.5)'
+                    borderBottom: '1px solid rgba(226, 232, 240, 0.5)'
                 }}
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
@@ -155,20 +155,20 @@ export function ProjectsPage() {
                                     alignItems: 'center',
                                     gap: '0.625rem',
                                     padding: '0.5rem 1rem',
-                                    background: 'rgba(238, 241, 230, 0.6)',
+                                    background: 'rgba(241, 245, 249, 0.6)',
                                     borderRadius: '9999px',
                                     border: 'none',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s'
                                 }}
                                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                whileHover={{ background: 'rgba(238, 241, 230, 0.9)' }}
+                                whileHover={{ background: 'rgba(241, 245, 249, 0.9)' }}
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <div style={{
                                     width: '2rem',
                                     height: '2rem',
-                                    background: 'linear-gradient(135deg, #849362 0%, #687549 100%)',
+                                    background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
                                     borderRadius: '50%',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -179,7 +179,7 @@ export function ProjectsPage() {
                                 }}>
                                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                                 </div>
-                                <span style={{ color: '#525c3a', fontSize: '0.875rem', fontWeight: 500 }}>
+                                <span style={{ color: '#334155', fontSize: '0.875rem', fontWeight: 500 }}>
                                     {user?.name?.split(' ')[0] || 'User'}
                                 </span>
                             </motion.button>
@@ -193,9 +193,9 @@ export function ProjectsPage() {
                                             right: 0,
                                             width: '12rem',
                                             background: 'white',
-                                            border: '1px solid #dce3ce',
+                                            border: '1px solid #e2e8f0',
                                             borderRadius: '1rem',
-                                            boxShadow: '0 10px 25px -5px rgba(82, 92, 58, 0.15)',
+                                            boxShadow: '0 10px 25px -5px rgba(51, 65, 85, 0.15)',
                                             padding: '0.5rem',
                                             zIndex: 60
                                         }}
@@ -204,9 +204,9 @@ export function ProjectsPage() {
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f0f2eb', marginBottom: '0.5rem' }}>
-                                            <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: '#3a3f2c' }}>{user?.name}</p>
-                                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#849362' }}>{user?.email}</p>
+                                        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.5rem' }}>
+                                            <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: '#1e293b' }}>{user?.name}</p>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>{user?.email}</p>
                                         </div>
                                         <motion.button
                                             style={{
@@ -218,7 +218,7 @@ export function ProjectsPage() {
                                                 border: 'none',
                                                 borderRadius: '0.75rem',
                                                 background: 'transparent',
-                                                color: '#687549',
+                                                color: '#475569',
                                                 fontSize: '0.875rem',
                                                 fontWeight: 500,
                                                 cursor: 'pointer',
@@ -249,8 +249,8 @@ export function ProjectsPage() {
                     animate="visible"
                     transition={{ duration: 0.5 }}
                 >
-                    <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#3a3f2c', marginBottom: '0.5rem' }}>My Projects</h1>
-                    <p style={{ color: '#849362' }}>Manage and organize your LaTeX documents</p>
+                    <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>My Projects</h1>
+                    <p style={{ color: '#64748b' }}>Manage and organize your LaTeX documents</p>
                 </motion.div>
 
                 {/* Actions Bar */}
@@ -270,7 +270,7 @@ export function ProjectsPage() {
                                 left: '1rem',
                                 top: '50%',
                                 transform: 'translateY(-50%)',
-                                color: isSearchFocused ? '#687549' : '#a3b082',
+                                color: isSearchFocused ? '#475569' : '#94a3b8',
                                 transition: 'color 0.2s'
                             }}
                         />
@@ -288,9 +288,9 @@ export function ProjectsPage() {
                                 paddingTop: '0.875rem',
                                 paddingBottom: '0.875rem',
                                 background: 'white',
-                                border: '1px solid #dce3ce',
+                                border: '1px solid #e2e8f0',
                                 borderRadius: '0.75rem',
-                                color: '#3a3f2c',
+                                color: '#1e293b',
                                 fontSize: '1rem',
                                 outline: 'none',
                                 boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -306,18 +306,18 @@ export function ProjectsPage() {
                             justifyContent: 'center',
                             gap: '0.5rem',
                             padding: '0.875rem 1.5rem',
-                            background: '#525c3a',
+                            background: '#334155',
                             color: 'white',
                             borderRadius: '0.75rem',
                             fontWeight: 600,
                             border: 'none',
                             cursor: 'pointer',
-                            boxShadow: '0 10px 15px -3px rgba(82, 92, 58, 0.2)',
+                            boxShadow: '0 10px 15px -3px rgba(51, 65, 85, 0.2)',
                             transition: 'all 0.2s',
                             whiteSpace: 'nowrap'
                         }}
                         onClick={() => setIsCreating(true)}
-                        whileHover={{ scale: 1.02, background: '#434a31' }}
+                        whileHover={{ scale: 1.02, background: '#1e293b' }}
                         whileTap={{ scale: 0.98 }}
                     >
                         <Plus size={20} />
@@ -333,9 +333,9 @@ export function ProjectsPage() {
                                 marginBottom: '2rem',
                                 padding: '1.5rem',
                                 background: 'white',
-                                border: '1px solid #dce3ce',
+                                border: '1px solid #e2e8f0',
                                 borderRadius: '1rem',
-                                boxShadow: '0 20px 25px -5px rgba(82, 92, 58, 0.1)'
+                                boxShadow: '0 20px 25px -5px rgba(51, 65, 85, 0.1)'
                             }}
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -343,8 +343,8 @@ export function ProjectsPage() {
                             transition={{ duration: 0.3 }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#434a31', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <Sparkles size={18} color="#849362" />
+                                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Snowflake size={18} color="#06b6d4" />
                                     Create New Project
                                 </h3>
                                 <button
@@ -352,7 +352,7 @@ export function ProjectsPage() {
                                     style={{
                                         padding: '0.5rem',
                                         borderRadius: '0.5rem',
-                                        color: '#a3b082',
+                                        color: '#94a3b8',
                                         background: 'transparent',
                                         border: 'none',
                                         cursor: 'pointer',
@@ -376,10 +376,10 @@ export function ProjectsPage() {
                                     style={{
                                         flex: 1,
                                         padding: '0.75rem 1rem',
-                                        background: 'rgba(248, 249, 244, 0.5)',
-                                        border: '1px solid #dce3ce',
+                                        background: 'rgba(248, 250, 252, 0.5)',
+                                        border: '1px solid #e2e8f0',
                                         borderRadius: '0.75rem',
-                                        color: '#3a3f2c',
+                                        color: '#1e293b',
                                         fontSize: '1rem',
                                         outline: 'none'
                                     }}
@@ -388,13 +388,13 @@ export function ProjectsPage() {
                                     onClick={handleCreateProject}
                                     style={{
                                         padding: '0.75rem 1.5rem',
-                                        background: '#525c3a',
+                                        background: '#334155',
                                         color: 'white',
                                         borderRadius: '0.75rem',
                                         fontWeight: 600,
                                         border: 'none',
                                         cursor: 'pointer',
-                                        boxShadow: '0 4px 6px -1px rgba(82, 92, 58, 0.2)'
+                                        boxShadow: '0 4px 6px -1px rgba(51, 65, 85, 0.2)'
                                     }}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
@@ -405,8 +405,8 @@ export function ProjectsPage() {
                                     onClick={() => setIsCreating(false)}
                                     style={{
                                         padding: '0.75rem 1.5rem',
-                                        border: '1px solid #dce3ce',
-                                        color: '#687549',
+                                        border: '1px solid #e2e8f0',
+                                        color: '#475569',
                                         borderRadius: '0.75rem',
                                         fontWeight: 500,
                                         background: 'white',
@@ -423,8 +423,8 @@ export function ProjectsPage() {
                 {/* Content */}
                 {isLoading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 0' }}>
-                        <Loader2 size={32} color="#687549" className="animate-spin" />
-                        <p style={{ color: '#849362', marginTop: '1rem' }}>Loading projects...</p>
+                        <Loader2 size={32} color="#475569" className="animate-spin" />
+                        <p style={{ color: '#64748b', marginTop: '1rem' }}>Loading projects...</p>
                     </div>
                 ) : filteredProjects.length === 0 ? (
                     <motion.div
@@ -438,7 +438,7 @@ export function ProjectsPage() {
                             style={{
                                 width: '6rem',
                                 height: '6rem',
-                                background: '#eef1e6',
+                                background: '#f1f5f9',
                                 borderRadius: '1.5rem',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -448,12 +448,12 @@ export function ProjectsPage() {
                             animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
                             transition={{ duration: 4, repeat: Infinity }}
                         >
-                            <FolderOpen size={40} color="#a3b082" />
+                            <FolderOpen size={40} color="#94a3b8" />
                         </motion.div>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#525c3a', marginBottom: '0.5rem' }}>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
                             {searchQuery ? 'No projects found' : 'No projects yet'}
                         </h2>
-                        <p style={{ color: '#849362', marginBottom: '2rem', textAlign: 'center', maxWidth: '28rem' }}>
+                        <p style={{ color: '#64748b', marginBottom: '2rem', textAlign: 'center', maxWidth: '28rem' }}>
                             {searchQuery
                                 ? 'Try a different search term or clear your search'
                                 : 'Create your first LaTeX document and start writing beautiful papers!'}
@@ -466,13 +466,13 @@ export function ProjectsPage() {
                                     alignItems: 'center',
                                     gap: '0.5rem',
                                     padding: '1rem 2rem',
-                                    background: '#525c3a',
+                                    background: '#334155',
                                     color: 'white',
                                     borderRadius: '0.75rem',
                                     fontWeight: 600,
                                     border: 'none',
                                     cursor: 'pointer',
-                                    boxShadow: '0 10px 15px -3px rgba(82, 92, 58, 0.2)'
+                                    boxShadow: '0 10px 15px -3px rgba(51, 65, 85, 0.2)'
                                 }}
                                 whileHover={{ scale: 1.02, y: -2 }}
                                 whileTap={{ scale: 0.98 }}
@@ -499,7 +499,7 @@ export function ProjectsPage() {
                                 style={{
                                     position: 'relative',
                                     background: 'white',
-                                    border: '1px solid #eef1e6',
+                                    border: '1px solid #f1f5f9',
                                     borderRadius: '1rem',
                                     overflow: 'hidden',
                                     cursor: 'pointer',
@@ -509,8 +509,8 @@ export function ProjectsPage() {
                                 transition={{ duration: 0.4 }}
                                 whileHover={{
                                     y: -8,
-                                    boxShadow: '0 25px 50px -12px rgba(82, 92, 58, 0.15)',
-                                    borderColor: '#dce3ce'
+                                    boxShadow: '0 25px 50px -12px rgba(51, 65, 85, 0.15)',
+                                    borderColor: '#e2e8f0'
                                 }}
                             >
                                 <Link to={`/editor/${project.id}`} style={{ display: 'block', padding: '1.5rem', textDecoration: 'none' }}>
@@ -518,7 +518,7 @@ export function ProjectsPage() {
                                         style={{
                                             width: '3rem',
                                             height: '3rem',
-                                            background: 'linear-gradient(135deg, #eef1e6 0%, #dce3ce 100%)',
+                                            background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
                                             borderRadius: '0.75rem',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -529,12 +529,12 @@ export function ProjectsPage() {
                                         whileHover={{ scale: 1.1, rotate: 5 }}
                                         transition={{ type: "spring", stiffness: 400 }}
                                     >
-                                        <FileText size={22} color="#687549" />
+                                        <FileText size={22} color="#475569" />
                                     </motion.div>
                                     <h3 style={{
                                         fontSize: '1.125rem',
                                         fontWeight: 600,
-                                        color: '#434a31',
+                                        color: '#1e293b',
                                         marginBottom: '0.25rem',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
@@ -542,7 +542,7 @@ export function ProjectsPage() {
                                     }}>
                                         {project.name}
                                     </h3>
-                                    <p style={{ fontSize: '0.875rem', color: '#a3b082' }}>
+                                    <p style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
                                         Updated {formatDate(project.updatedAt)}
                                     </p>
                                 </Link>
@@ -553,7 +553,7 @@ export function ProjectsPage() {
                                         right: '1rem',
                                         padding: '0.625rem',
                                         borderRadius: '0.75rem',
-                                        color: '#c2ccab',
+                                        color: '#cbd5e1',
                                         background: 'transparent',
                                         border: 'none',
                                         cursor: 'pointer',
@@ -575,7 +575,7 @@ export function ProjectsPage() {
                                         right: '3.5rem',
                                         padding: '0.625rem',
                                         borderRadius: '0.75rem',
-                                        color: '#c2ccab',
+                                        color: '#cbd5e1',
                                         background: 'transparent',
                                         border: 'none',
                                         cursor: 'pointer',
